@@ -327,7 +327,8 @@ export function selectWeek(data: AppData, days: ISODate[], today: ISODate): Week
         !i.parentId &&
         !i.scheduledDate &&
         ACTIONABLE_KINDS.has(i.kind) &&
-        (!i.dueDate || i.dueDate <= last),
+        // com prazo dentro da semana ele já aparece no dia do prazo; atrasados ficam aqui
+        (!i.dueDate || i.dueDate < first),
     )
     .sort((a, b) => (a.dueDate ?? "9999").localeCompare(b.dueDate ?? "9999"));
 
@@ -499,11 +500,17 @@ export function selectMonth(data: AppData, anyDayInMonth: ISODate, today: ISODat
     .filter((i) => {
       if (!isOpen(i)) return false;
       const d = i.dueDate ?? (i.kind === "event" ? i.scheduledDate : null);
-      if (!d || d < today || d > horizon) return false;
-      return i.priority === "high" || i.kind === "event" || (i.money && i.money.amountCents >= 50000) || !!i.projectId;
+      // a partir de amanhã: hoje já está na tela Hoje
+      if (!d || d <= today || d > horizon) return false;
+      return (
+        i.priority === "high" ||
+        (i.kind === "event" && !!i.people?.length) ||
+        (!!i.money && i.money.amountCents >= 50000) ||
+        (!!i.projectId && !!i.dueDate && !i.money)
+      );
     })
     .sort((a, b) => (a.dueDate ?? a.scheduledDate ?? "").localeCompare(b.dueDate ?? b.scheduledDate ?? ""))
-    .slice(0, 6);
+    .slice(0, 5);
 
   return {
     start,

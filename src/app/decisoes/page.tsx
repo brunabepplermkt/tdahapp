@@ -37,7 +37,9 @@ function describeActions(data: AppData, d: Decision): string[] {
 
 function Decisions() {
   const { data, today } = useApp();
-  const list = pendingDecisions(data.decisions, today, data.items);
+  // pagamentos e respostas primeiro; sugestões do assistente por último
+  const order: Record<DecisionKind, number> = { pay: 0, reply: 1, approve: 2, choose_date: 3, agent_suggestion: 4 };
+  const list = pendingDecisions(data.decisions, today, data.items).sort((a, b) => order[a.kind] - order[b.kind]);
   const resolved = data.decisions
     .filter((d) => d.status === "approved" || d.status === "ignored")
     .sort((a, b) => (b.resolvedAt ?? "").localeCompare(a.resolvedAt ?? ""))
@@ -101,7 +103,7 @@ function DecisionCard({ decision, today }: { decision: Decision; today: string }
           Ao aprovar: {effects.join("; ").replace(/^./, (c) => c.toLowerCase())}.
         </p>
       )}
-      <div className="mt-4 flex flex-wrap gap-2">
+      <div className="mt-4 flex flex-wrap gap-1.5">
         <Button variant="primary" size="sm" onClick={() => approve(decision)}>
           {decision.kind === "pay" ? "Já paguei" : "Aprovar"}
         </Button>
@@ -120,6 +122,7 @@ function DecisionCard({ decision, today }: { decision: Decision; today: string }
         <Button
           size="sm"
           variant="ghost"
+          className="ml-auto px-2.5"
           onClick={() => apply((d) => resolveDecision(d, decision.id, "snoozed", addDays(today, 1)), "Volta amanhã.")}
         >
           Adiar

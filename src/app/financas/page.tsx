@@ -83,7 +83,7 @@ function Finance() {
           <AddEntry onDone={() => setAdding(false)} defaultDate={offset === 0 ? today : anchor.slice(0, 8) + "10"} />
         ) : (
           <Button onClick={() => setAdding(true)}>
-            <IconPlus size={18} /> Registrar conta, despesa ou recebimento
+            <IconPlus size={18} /> Adicionar conta ou recebimento
           </Button>
         )}
       </div>

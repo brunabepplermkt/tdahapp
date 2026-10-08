@@ -60,3 +60,11 @@ describe("tools", () => {
     expect(r.data.activity[0].tool).toBe("complete_item");
   });
 });
+
+describe("planner — carga", () => {
+  it("não reclama de semana cheia quando há espaço (sem contar prazo duas vezes)", () => {
+    const data = buildDemoData(today);
+    const plan = proposeWeekPlan(data, today, today);
+    expect(plan.warnings.some((w) => w.includes("Ver por que o webhook"))).toBe(false);
+  });
+});

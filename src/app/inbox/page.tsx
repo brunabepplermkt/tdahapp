@@ -71,7 +71,7 @@ function Inbox() {
                   }, `${confident.length} capturas organizadas.`)
                 }
               >
-                Aceitar as {confident.length} claras
+                Aceitar {confident.length} claras
               </Button>
             )}
           </div>
@@ -175,7 +175,7 @@ function CaptureCard({
         </div>
       )}
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-1.5">
         <Button
           variant="primary"
           size="sm"
@@ -199,12 +199,14 @@ function CaptureCard({
             Cancelar
           </Button>
         )}
-        <Button size="sm" variant="ghost" onClick={onSnooze}>
-          Amanhã
-        </Button>
-        <Button size="sm" variant="ghost" onClick={onArchive}>
-          Arquivar
-        </Button>
+        <span className="ml-auto flex">
+          <Button size="sm" variant="ghost" className="px-2.5" onClick={onSnooze}>
+            Amanhã
+          </Button>
+          <Button size="sm" variant="ghost" className="px-2.5" onClick={onArchive}>
+            Arquivar
+          </Button>
+        </span>
       </div>
     </article>
   );

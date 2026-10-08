@@ -364,9 +364,7 @@ export function extractPeople(text: string, projects: Project[] = []): string[] 
     projects.flatMap((p) => [p.name, ...(p.aliases ?? [])]).flatMap((n) => normalize(n).split(/\s+/)),
   );
   // nomes próprios depois de preposições: “pro Rafael”, “com a Ana”
-  for (const m of text.matchAll(
-    /\b(?:pro|pra|para|com|ao|à|a|o|do|da)\s+(?:o\s+|a\s+)?([A-ZÀ-Ý][a-zà-ÿ]{2,})\b(?![\wà-ÿ])/g,
-  )) {
+  for (const m of text.matchAll(/\b(?:pro|pra|para|com|ao|à)\s+(?:o\s+|a\s+)?([A-ZÀ-Ý][a-zà-ÿ]{2,})\b(?![\wà-ÿ])/g)) {
     const n = normalize(m[1]);
     if (NOT_PEOPLE.has(n) || projectWords.has(n) || PERSON_STOP.has(n)) continue;
     people.add(m[1]);

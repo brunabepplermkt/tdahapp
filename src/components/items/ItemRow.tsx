@@ -63,9 +63,14 @@ export function useItemMeta(item: Item, { today, showDate = true, showProject = 
   if (showDate && item.status === "open") {
     if (item.dueDate && item.kind !== "event") {
       const d = diffDays(item.dueDate, today);
-      if (d < 0) parts.push({ text: d === -1 ? "venceu ontem" : `venceu há ${-d} dias`, tone: "danger" });
-      else if (d <= 1) parts.push({ text: `vence ${relativeDay(item.dueDate, today)}`, tone: "warn" });
-      else parts.push({ text: `prazo ${relativeDay(item.dueDate, today)}` });
+      const incoming = item.money?.direction === "in";
+      const when = relativeDay(item.dueDate, today);
+      if (d < 0) {
+        const ago = d === -1 ? "ontem" : `há ${-d} dias`;
+        parts.push({ text: incoming ? `atrasado (${ago})` : `venceu ${ago}`, tone: incoming ? "warn" : "danger" });
+      } else if (incoming) parts.push({ text: `previsto ${when}` });
+      else if (d <= 1) parts.push({ text: `vence ${when}`, tone: "warn" });
+      else parts.push({ text: item.money ? `vence ${when}` : `prazo ${when}` });
     } else if (item.scheduledDate && item.scheduledDate !== today) {
       parts.push({ text: relativeDay(item.scheduledDate, today) });
     }

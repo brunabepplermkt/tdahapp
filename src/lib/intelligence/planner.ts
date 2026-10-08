@@ -109,7 +109,8 @@ export function proposeWeekPlan(data: AppData, anyDayInWeek: ISODate, today: ISO
   for (const d of days) {
     const b = bucketForDay(data.items, d);
     const eventsLoad = b.events.filter(isOpen).reduce((s, e) => s + itemLoad(e), 0);
-    const tasksLoad = b.items.filter(isOpen).reduce((s, e) => s + itemLoad(e), 0);
+    // só o que já está PLANEJADO para o dia; itens que só têm prazo ali ainda serão distribuídos
+    const tasksLoad = b.items.filter((i) => isOpen(i) && i.scheduledDate === d).reduce((s, e) => s + itemLoad(e), 0);
     remaining.set(d, capacity(d) - tasksLoad - eventsLoad * 0.5);
     if (eventsLoad >= 240) {
       warnings.push(

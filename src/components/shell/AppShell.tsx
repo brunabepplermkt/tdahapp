@@ -115,7 +115,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           className="mb-6 flex h-11 items-center gap-2 rounded-xl bg-surface px-3 text-left text-[14px] text-muted shadow-soft transition hover:text-ink"
         >
           <IconPlus size={18} />
-          <span className="flex-1">O que está na sua cabeça?</span>
+          <span className="flex-1 truncate">O que está na cabeça?</span>
           <kbd className="rounded-md border border-line px-1.5 text-[11px] text-faint">N</kbd>
         </button>
         <WithPath render={(pathname) => <DesktopNav pathname={pathname} badges={badges} />} />

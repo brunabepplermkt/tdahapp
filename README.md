@@ -1,36 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Leve
 
-## Getting Started
+Um app pessoal para tirar as coisas da cabeça e ver, com clareza, **o que merece atenção agora**.
+Feito para cabeça com TDAH: captura sem fricção, poucas decisões por tela, adiar sem culpa.
 
-First, run the development server:
+> MVP local. Dados de exemplo são fictícios. Nenhuma conta, banco, agenda ou mensageiro está conectado.
+
+## Rodar
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Na primeira abertura o app cria dados de demonstração (relativos à data de hoje).
+Em **Mais → Seus dados** dá para recriar a demo, exportar um backup JSON ou começar do zero.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Comando | O quê |
+| --- | --- |
+| `npm run dev` | servidor de desenvolvimento |
+| `npm run build && npm start` | build de produção (PWA + service worker ativos) |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | TypeScript |
+| `npm test` | testes (Vitest) — parser, seletores, planejador, ferramentas |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+No iPhone: abra no Safari → Compartilhar → **Adicionar à Tela de Início**.
 
-## Learn More
+## O que tem
 
-To learn more about Next.js, take a look at the following resources:
+- **Hoje** — “Agora” (uma coisa), até 2 depois, agenda, dinheiro dos próximos dias, prazos que passaram,
+  um item esquecido para relembrar. O resto fica recolhido.
+- **Semana** — dias com compromissos, tarefas, contas e prazos; “sem dia ainda”; projetos parados;
+  **Organizar minha semana** (proposta para revisar e aplicar).
+- **Mês** — calendário, dinheiro do mês, metas, o que está chegando, prazos; **Organizar meu mês**.
+- **Captura rápida** (botão `+` ou tecla `N`) — escreva do jeito que vier; o app mostra como entendeu.
+- **Inbox** — aceitar, editar, adiar, arquivar capturas.
+- **Decisões** — Aprovar / Editar / Adiar / Ignorar. Sugestões do assistente local caem aqui.
+- **Projetos** — onde estou, próxima ação, pendências, prazo, notas.
+- **Finanças** — contas, despesas, recebimentos, recorrência; a pagar / pago / a receber / recebido / saldo previsto.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Documentação: [docs/ARQUITETURA.md](docs/ARQUITETURA.md) · [docs/PROXIMA-FASE.md](docs/PROXIMA-FASE.md)

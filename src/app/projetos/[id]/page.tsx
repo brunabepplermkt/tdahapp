@@ -63,9 +63,9 @@ function ProjectDetail({ project }: { project: Project }) {
     .filter((n) => n.projectId === project.id)
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   const ideas = s.open.filter((i) => i.kind === "idea");
-  const pending = s.open.filter(
-    (i) => i.kind !== "idea" && i.id !== s.nextAction?.id && i.id !== s.nextAction?.parentId,
-  );
+  const isTask = (i: (typeof s.open)[number]) => !["idea", "event", "goal"].includes(i.kind) && !i.money;
+  const pending = s.open.filter((i) => isTask(i) && i.id !== s.nextAction?.id && i.id !== s.nextAction?.parentId);
+  const related = s.open.filter((i) => i.kind === "event" || i.kind === "goal" || !!i.money);
   const nextParent = s.nextAction?.parentId ? data.items.find((i) => i.id === s.nextAction!.parentId) : undefined;
 
   const save = (patch: Partial<Project>, msg?: string) => apply((d) => updateProject(d, project.id, patch), msg);
@@ -196,6 +196,16 @@ function ProjectDetail({ project }: { project: Project }) {
           </ul>
         )}
       </Section>
+
+      {related.length > 0 && (
+        <Collapsible title="Agenda, metas e dinheiro" count={related.length}>
+          <Group>
+            {related.map((i) => (
+              <ItemRow key={i.id} item={i} today={today} showProject={false} />
+            ))}
+          </Group>
+        </Collapsible>
+      )}
 
       {ideas.length > 0 && (
         <Collapsible title="Ideias" count={ideas.length}>
