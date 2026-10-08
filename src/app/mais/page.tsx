@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { pendingDecisions } from "@/lib/domain/selectors";
 import { useApp } from "@/lib/hooks/useApp";
-import { listInterpreters, toolManifest } from "@/lib/intelligence";
+import { listInterpreters } from "@/lib/intelligence";
+import { toolManifest } from "@/lib/tools";
 import { repository, type BackupInfo } from "@/lib/store/repository";
 import { useStore } from "@/lib/store/store";
 import { Ready } from "@/components/shell/AppShell";
@@ -178,7 +179,7 @@ function More() {
                         <p className="font-mono text-[13px] text-ink">
                           {t.name}
                           {!t.enabled && <span className="ml-2 font-sans text-[11px] text-danger">desabilitada</span>}
-                          {t.requiresConfirmation && t.enabled && (
+                          {t.policy.agent === "confirm" && t.enabled && (
                             <span className="ml-2 font-sans text-[11px] text-muted">pede confirmação</span>
                           )}
                         </p>

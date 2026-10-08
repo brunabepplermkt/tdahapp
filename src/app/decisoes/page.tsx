@@ -6,7 +6,7 @@ import { resolveDecision } from "@/lib/domain/operations";
 import { pendingDecisions } from "@/lib/domain/selectors";
 import type { AppData, Decision, DecisionKind } from "@/lib/domain/types";
 import { useApp } from "@/lib/hooks/useApp";
-import { getTool } from "@/lib/intelligence/tools";
+import { describeCall } from "@/lib/tools";
 import { useStore } from "@/lib/store/store";
 import { useUI } from "@/lib/store/ui";
 import { Ready } from "@/components/shell/AppShell";
@@ -29,10 +29,7 @@ const KIND: Record<DecisionKind, { label: string; tone: "warn" | "accent" | "neu
 };
 
 function describeActions(data: AppData, d: Decision): string[] {
-  return d.actions.map((a) => {
-    const t = getTool(a.tool);
-    return t && t.kind === "write" ? t.describe(data, a.input) : a.tool;
-  });
+  return d.actions.map((a) => describeCall(data, a));
 }
 
 function Decisions() {
@@ -93,7 +90,9 @@ function DecisionCard({ decision, today }: { decision: Decision; today: string }
       <div className="mb-2 flex items-center gap-2">
         <Pill tone={kind.tone}>{kind.label}</Pill>
         {decision.createdBy === "agent" && (
-          <span className="text-[12px] text-faint">sugerido pelo assistente local</span>
+          <span className="text-[12px] text-faint">
+            {decision.actions[0]?.origin === "agent" ? "sugerido por um agente" : "sugerido pelo assistente local"}
+          </span>
         )}
       </div>
       <h3 className="text-[17px] leading-snug font-semibold text-ink">{decision.title}</h3>

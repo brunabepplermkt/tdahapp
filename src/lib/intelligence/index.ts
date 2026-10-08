@@ -12,6 +12,11 @@ const providers: Record<string, CaptureInterpreter> = {
   heuristic: heuristicInterpreter,
 };
 
+/** Registra um interpretador (ex.: LLM no futuro). Nenhum é registrado hoje. */
+export function registerInterpreter(i: CaptureInterpreter) {
+  providers[i.id] = i;
+}
+
 export function getInterpreter(id = "heuristic"): CaptureInterpreter {
   return providers[id] ?? heuristicInterpreter;
 }
@@ -26,5 +31,6 @@ export const interpretNow = interpretText;
 export { suggestSteps } from "./breakdown";
 export { proposeMonthPlan, proposeWeekPlan, type PlanMove, type PlanProposal } from "./planner";
 export { runAgentRules } from "./rules";
-export { executeTool, runDecisionActions, toolManifest, TOOLS } from "./tools";
+export { createStructuredInterpreter, type StructuredProvider } from "./pipeline";
+export { buildExtractionPrompt, structuredJsonSchema, validateStructured } from "./structured";
 export type { CaptureInterpreter, InterpretContext } from "./types";

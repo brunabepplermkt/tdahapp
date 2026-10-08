@@ -119,6 +119,8 @@ export interface ItemDraft {
   startTime?: TimeOfDay | null;
   projectId?: string | null;
   people?: string[];
+  /** contexto livre (por quê / onde / com quem) — vira a nota do item */
+  context?: string | null;
   money?: Omit<Money, "settled" | "settledAt"> | null;
   recurrence?: { freq: RecurrenceFreq; interval?: number } | null;
 }
@@ -187,6 +189,9 @@ export type DecisionStatus = "pending" | "approved" | "snoozed" | "ignored";
 export interface ProposedAction {
   tool: string;
   input: Record<string, unknown>;
+  /** quem propôs (preenchido pelo executor ao virar decisão) */
+  origin?: ToolOrigin;
+  idempotencyKey?: string;
 }
 
 export interface Decision {
@@ -207,6 +212,20 @@ export interface Decision {
   resolvedAt?: ISODateTime | null;
 }
 
+/** De onde veio uma operação. Toda escrita carrega uma origem. */
+export type ToolOrigin = "user_app" | "automation" | "agent" | "import";
+
+export interface AuditEntity {
+  type: "item" | "capture" | "project" | "note" | "decision";
+  id: string;
+  op: "create" | "update" | "delete";
+}
+
+/**
+ * Trilha de auditoria (append-only): quem (origem), o quê (tool), em qual
+ * entidade, o que mudou, quando e com qual chave de idempotência.
+ * Entradas antigas não têm os campos opcionais.
+ */
 export interface AgentActivity {
   id: string;
   at: ISODateTime;
@@ -215,7 +234,20 @@ export interface AgentActivity {
   summary: string;
   status: "ok" | "error" | "proposed" | "rejected";
   input?: Record<string, unknown>;
+  origin?: ToolOrigin;
+  entities?: AuditEntity[];
+  /** mudança mínima por id: { campo: [antes, depois] } (criação: { "*": [null, "criado"] }) */
+  change?: Record<string, Record<string, [unknown, unknown]>>;
+  idempotencyKey?: string;
+  /** hash do pedido — detecta a mesma chave usada com conteúdo diferente */
+  requestHash?: string;
+  /** executada ao aprovar esta decisão */
+  decisionId?: string;
+  /** origem que propôs a ação, quando foi aprovada depois */
+  proposedBy?: ToolOrigin;
 }
+
+export type AuditEntry = AgentActivity;
 
 /* ---------------------------------------------------------------------------
  * Estado completo (o que o repositório persiste)

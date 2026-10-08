@@ -180,3 +180,19 @@ describe("mais formas de falar de tempo", () => {
     expect(interpretText("comprar 2 pacotes de café", ctx).drafts[0].startTime ?? null).toBeNull();
   });
 });
+
+describe("data no começo da frase", () => {
+  const text = "sexta preciso pagar a VPS e terminar o checkout do Beds24";
+  it("vale para as duas cláusulas e limpa o 'preciso'", () => {
+    const r = interpretText(text, ctx);
+    expect(r.drafts).toHaveLength(2);
+    expect(r.drafts[0]).toMatchObject({ title: "Pagar a VPS", kind: "bill", dueDate: "2026-10-09" });
+    expect(r.drafts[1]).toMatchObject({ title: "Terminar o checkout do Beds24", projectId: "p2", scheduledDate: "2026-10-09" });
+  });
+  it("frase única também", () => {
+    const r = interpretText("amanhã preciso ligar pro contador", ctx);
+    expect(r.drafts).toHaveLength(1);
+    expect(r.drafts[0].title).toBe("Ligar pro contador");
+    expect(r.drafts[0].scheduledDate).toBe("2026-10-09");
+  });
+});

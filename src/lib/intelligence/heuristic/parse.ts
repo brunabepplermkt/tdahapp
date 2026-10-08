@@ -506,8 +506,25 @@ function detectPriority(text: string): { priority: Priority; rest: string } {
  * Interpretação completa
  * ------------------------------------------------------------------------- */
 
+/**
+ * “sexta preciso pagar a VPS e terminar o checkout” — a data vem ANTES do
+ * “preciso”. Separa essa data inicial (vale para a frase toda) do resto.
+ */
+const LEADING_DATE_RE = /^(.{2,24}?)\s+(?=(?:eu\s+)?(?:preciso|tenho que|tenho de|devo|quero|vou|precisa)\b)/i;
+
+export function splitLeadingDate(text: string, today: ISODate): { hit: DateHit; rest: string } | null {
+  const m = text.match(LEADING_DATE_RE);
+  if (!m) return null;
+  const found = extractDate(m[1], today);
+  if (!found.value || found.rest.trim()) return null;
+  return { hit: found.value, rest: text.slice(m[0].length) };
+}
+
 export function interpretText(raw: string, ctx: InterpretContext): Interpretation {
-  const text = raw.normalize("NFC").trim();
+  let text = raw.normalize("NFC").trim();
+  const lead = splitLeadingDate(text, ctx.today);
+  // a data inicial vai para o fim da primeira cláusula e vale para as seguintes sem data própria
+  if (lead) text = `${lead.rest} ${text.slice(0, text.length - lead.rest.length).trim()}`.trim();
   const clauses = splitClauses(text);
   const notes: string[] = [];
   const drafts: ItemDraft[] = [];
@@ -536,6 +553,7 @@ export function interpretText(raw: string, ctx: InterpretContext): Interpretatio
     if (!date.value && period.value) {
       date.value = { date: ctx.today, isDeadline: false, label: period.value.toLowerCase() };
     }
+    if (!date.value && lead && clauses.length > 1) date.value = lead.hit;
 
     const cls = classify(base, { hasTime: !!time.value, hasDate: !!date.value, wasReminder });
     const project = matchProject(clause, ctx.projects) ?? (clauses.length === 1 ? sharedProject : null);

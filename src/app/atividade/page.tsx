@@ -14,7 +14,8 @@ export default function ActivityPage() {
 }
 
 const ACTOR = { user: "Você", agent: "Assistente", system: "Sistema" };
-const STATUS = { ok: "", proposed: "sugeriu", error: "bloqueado", rejected: "recusado" };
+const ORIGIN = { user_app: "app", automation: "automação", agent: "agente", import: "importação" };
+const STATUS = { ok: "", proposed: "aguardando aprovação", error: "falhou", rejected: "recusado" };
 
 function Activity() {
   const { data } = useApp();
@@ -36,7 +37,9 @@ function Activity() {
                 {STATUS[a.status] && (
                   <span className={clsx(a.status === "error" && "text-danger")}> · {STATUS[a.status]}</span>
                 )}{" "}
-                · <span className="font-mono">{a.tool}</span> ·{" "}
+                · <span className="font-mono">{a.tool}</span>
+                {a.origin && <span> · origem: {ORIGIN[a.origin]}</span>}
+                {a.proposedBy && <span> · proposto por {ORIGIN[a.proposedBy]}</span>} ·{" "}
                 {new Date(a.at).toLocaleString("pt-BR", {
                   day: "2-digit",
                   month: "short",

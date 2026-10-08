@@ -14,10 +14,12 @@ import type {
   Decision,
   HistoryEntry,
   ISODate,
+  Interpretation,
   Item,
   ItemDraft,
   Note,
   Project,
+  RecurrenceFreq,
 } from "./types";
 
 export type ItemInput = Partial<Omit<Item, "id" | "history" | "createdAt" | "updatedAt">> & {
@@ -213,6 +215,7 @@ export function draftToItemInput(draft: ItemDraft, captureId?: string): ItemInpu
     startTime: draft.startTime ?? null,
     projectId: draft.projectId ?? null,
     people: draft.people ?? [],
+    notes: draft.context?.trim() || undefined,
     money: draft.money ? { ...draft.money, settled: false } : null,
     recurrence: draft.recurrence ? { ...draft.recurrence, seriesId: newId("ser") } : null,
     captureId: captureId ?? null,
@@ -234,6 +237,23 @@ export function acceptCapture(data: AppData, captureId: string, drafts: ItemDraf
       c.id === captureId ? { ...c, status: "processed", itemIds: [...c.itemIds, ...ids] } : c,
     ),
   };
+}
+
+/**
+ * Captura um texto já interpretado. `accept` cria os itens na hora; sem ele a
+ * captura espera na Inbox para revisão. É o caminho único de captura — usado
+ * pelo app e pela ferramenta `capture_item`.
+ */
+export function captureText(
+  data: AppData,
+  text: string,
+  interpretation: Interpretation,
+  accept = false,
+): { data: AppData; capture: Capture } {
+  const res = addCapture(data, { text, interpretation });
+  if (!accept) return res;
+  const next = acceptCapture(res.data, res.capture.id, interpretation.drafts);
+  return { data: next, capture: next.captures.find((c) => c.id === res.capture.id)! };
 }
 
 export function snoozeCapture(data: AppData, captureId: string, until: ISODate): AppData {
@@ -313,7 +333,48 @@ export function resolveDecision(
   };
 }
 
+/** Quantas entradas de auditoria ficam no aparelho (a trilha completa vive no remoto). */
+export const AUDIT_LIMIT = 500;
+
 export function logActivity(data: AppData, entry: Omit<AgentActivity, "id" | "at">): AppData {
   const a: AgentActivity = { ...entry, id: newId("act"), at: nowISO() };
-  return { ...data, activity: [a, ...data.activity].slice(0, 200) };
+  return { ...data, activity: [a, ...data.activity].slice(0, AUDIT_LIMIT) };
+}
+
+/* ---------------------------------------------------------------------------
+ * Regras compartilhadas entre UI e ferramentas
+ * ------------------------------------------------------------------------- */
+
+export interface FinancialEntryInput {
+  title: string;
+  direction: "in" | "out";
+  amountCents: number;
+  /** vencimento (conta) ou data prevista (recebimento) */
+  dueDate?: ISODate | null;
+  category?: string;
+  /** já pago/recebido? (registra, não movimenta dinheiro) */
+  settled?: boolean;
+  projectId?: string | null;
+  notes?: string;
+  recurrence?: { freq: RecurrenceFreq; interval?: number } | null;
+}
+
+/**
+ * Lançamento financeiro: conta a pagar, despesa já feita ou recebimento.
+ * Mesma forma de item que a UI usa (kind + area "finance" + bloco `money`).
+ */
+export function addFinancialEntry(data: AppData, input: FinancialEntryInput): { data: AppData; item: Item } {
+  const kind = input.direction === "in" ? "income" : input.settled || !input.dueDate ? "expense" : "bill";
+  const created = addItem(data, {
+    title: input.title,
+    kind,
+    area: "finance",
+    notes: input.notes,
+    dueDate: input.dueDate ?? null,
+    projectId: input.projectId ?? null,
+    money: { amountCents: input.amountCents, direction: input.direction, category: input.category, settled: false },
+    recurrence: input.recurrence ? { ...input.recurrence, seriesId: newId("ser") } : null,
+  });
+  if (!input.settled) return created;
+  return { data: completeItem(created.data, created.item.id), item: created.item };
 }

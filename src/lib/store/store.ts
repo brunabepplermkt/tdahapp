@@ -11,8 +11,8 @@ import { todayISO } from "@/lib/domain/dates";
 import * as ops from "@/lib/domain/operations";
 import type { AppData, Decision, ISODate, Item, ItemDraft, Project } from "@/lib/domain/types";
 import { buildDemoData, emptyData } from "@/lib/demo/demo-data";
-import { executeTool, runAgentRules, runDecisionActions } from "@/lib/intelligence";
-import { getInterpreter } from "@/lib/intelligence";
+import { getInterpreter, runAgentRules } from "@/lib/intelligence";
+import { executeTool, runDecisionActions } from "@/lib/tools";
 import type { PlanMove } from "@/lib/intelligence";
 import { repository } from "./repository";
 
@@ -108,25 +108,30 @@ export const useStore = create<StoreState>((set, get) => ({
     if (!clean) return;
     const data = get().data;
     const interpretation = await getInterpreter().interpret(clean, { today: todayISO(), projects: data.projects });
+    const accept = !!opts?.acceptNow;
+    let failure: string | null = null;
     get().apply(
       (d) => {
-        const res = ops.addCapture(d, { text: clean, interpretation });
-        let next = res.data;
-        if (opts?.acceptNow) next = ops.acceptCapture(next, res.capture.id, interpretation.drafts);
-        return ops.logActivity(next, {
-          actor: "user",
-          tool: "capture",
-          summary: opts?.acceptNow ? `Capturou e organizou: “${clean}”` : `Capturou: “${clean}”`,
-          status: "ok",
-        });
+        const r = executeTool(
+          d,
+          { tool: "capture_item", input: { text: clean, accept } },
+          { origin: "user_app", interpretation },
+        );
+        if (r.status === "error") {
+          failure = r.error;
+          return d;
+        }
+        return r.data;
       },
-      opts?.acceptNow ? "Organizado." : "Guardado na Inbox. Pode esquecer por agora.",
+      accept ? "Organizado." : "Guardado na Inbox. Pode esquecer por agora.",
     );
+    // nunca perder uma captura em silêncio
+    if (failure) get().showToast(`Não consegui guardar: ${failure}`);
   },
 
   acceptCapture(captureId, drafts) {
     get().apply(
-      (d) => executeTool(d, { tool: "accept_capture", input: { captureId, drafts } }, { actor: "user" }).data,
+      (d) => executeTool(d, { tool: "accept_capture", input: { captureId, drafts } }, { origin: "user_app" }).data,
       drafts.length > 1 ? `${drafts.length} itens organizados.` : "Organizado.",
     );
   },
@@ -158,7 +163,7 @@ export const useStore = create<StoreState>((set, get) => ({
         : "Feito. Um a menos.";
       get().apply(
         (d) =>
-          executeTool(d, { tool: item.money ? "mark_paid" : "complete_item", input: { itemId: id } }, { actor: "user" })
+          executeTool(d, { tool: item.money ? "mark_paid" : "complete_item", input: { itemId: id } }, { origin: "user_app" })
             .data,
         msg,
       );
@@ -167,7 +172,7 @@ export const useStore = create<StoreState>((set, get) => ({
 
   postpone(id, to, label) {
     get().apply(
-      (d) => executeTool(d, { tool: "postpone_item", input: { itemId: id, to } }, { actor: "user" }).data,
+      (d) => executeTool(d, { tool: "snooze_item", input: { itemId: id, until: to } }, { origin: "user_app" }).data,
       label ? `Tudo bem. Volta ${label}.` : "Tirado do radar por enquanto.",
     );
   },
@@ -204,7 +209,7 @@ export const useStore = create<StoreState>((set, get) => ({
           next = executeTool(
             next,
             { tool: "schedule_item", input: { itemId: m.itemId, date: m.to } },
-            { actor: "user", silent: true },
+            { origin: "user_app", silent: true },
           ).data;
         }
         return ops.logActivity(next, {
