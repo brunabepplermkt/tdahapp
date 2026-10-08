@@ -142,10 +142,18 @@ Next.js 16 (App Router, Cache Components ligado pelo template), React 19, TypeSc
 date-fns, Vitest. Páginas são Client Components (dados vivem no cliente); o shell é pré-renderizado.
 PWA: `manifest.ts`, ícones, `public/sw.js` (cache de assets + fallback offline das navegações; só em produção).
 
-### 10. Design
-Fonte do sistema (SF Pro no iPhone), tons quase neutros, **cor só com significado** (vencido, dinheiro saindo/entrando,
-ação principal, pontinho de área). Grupos estilo iOS, toque ≥ 44px, barra inferior + botão `+` sempre visível,
-folhas (bottom sheets) em vez de telas novas. Modo escuro automático. Linguagem humana, sem culpa.
+### 10. Design (v3 — calmo, branco, pouco texto)
+Princípio: **“o que merece minha atenção agora?”** — uma coisa principal por tela, pouco texto, progresso visível.
+- **Tokens** em `src/app/globals.css`: fundo **branco puro**, cards em lavanda-gelo (`--surface`), tinta quase preta, **coral** como
+  único acento (botão principal, aba ativa, destaque do título), lilás só em ícones. Vencido = vermelho-tijolo sempre com palavra.
+  Contrastes de texto ≥ 4.5:1 (claro e escuro).
+- **Tipografia:** Outfit (OFL, via `next/font`) em peso leve para títulos/números; corpo na fonte do sistema. Classes `t-display`,
+  `t-title`, `t-heading`, `t-label`.
+- **Estrutura:** listas secundárias são “flat” (linhas finas sobre o fundo, `Group flat`); cartões só para o que merece destaque
+  (o “Agora”, Decisões, calendário, dinheiro). A `aura` (mancha suave) aparece só no hero do “Agora” e no Modo Foco.
+- **Mobile:** barra inferior flutuante (aba ativa em coral), botão `+` que some quando o convite “Joga aqui…” do Hoje está à vista,
+  toque ≥ 44px, `prefers-reduced-motion` respeitado.
+- **Texto:** sem introduções/dicas; no máximo 2 metadados por item; frases viram número, ícone ou uma palavra.
 
 ## Segurança
 - Sem service role no cliente (teste automático vigia `src/`); RLS em todas as tabelas; escritas passam por validação + política + auditoria.

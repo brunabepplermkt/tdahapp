@@ -45,4 +45,4 @@ No iPhone: abra no Safari → Compartilhar → **Adicionar à Tela de Início**.
 - **Busca global** (lupa no Hoje ou tecla `/`) — itens, projetos, notas e capturas, sem se preocupar com acentos.
 - **Gestos** — deslizar para a direita conclui, para a esquerda adia para amanhã.
 
-Documentação: [docs/ARQUITETURA.md](docs/ARQUITETURA.md) · [docs/PROXIMA-FASE.md](docs/PROXIMA-FASE.md)
+Documentação: [docs/ARQUITETURA.md](docs/ARQUITETURA.md) · [docs/PROXIMA-FASE.md](docs/PROXIMA-FASE.md) · [docs/PUBLICAR.md](docs/PUBLICAR.md)
