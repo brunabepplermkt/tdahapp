@@ -13,6 +13,8 @@ const ROUTES = [
   "/mais",
   "/atividade",
   "/algum-dia",
+  "/foco",
+  "/revisao",
 ];
 
 for (const route of ROUTES) {

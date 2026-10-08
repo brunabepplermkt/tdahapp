@@ -7,7 +7,7 @@ import { listInterpreters, toolManifest } from "@/lib/intelligence";
 import { repository, type BackupInfo } from "@/lib/store/repository";
 import { useStore } from "@/lib/store/store";
 import { Ready } from "@/components/shell/AppShell";
-import { IconActivity, IconDecision, IconFolder, IconLeaf, IconWallet } from "@/components/ui/icons";
+import { IconActivity, IconDecision, IconFolder, IconLeaf, IconWallet, IconWeek } from "@/components/ui/icons";
 import { Button, Collapsible, Group, LinkRow, PageHeader, Section } from "@/components/ui/primitives";
 
 export default function MorePage() {
@@ -80,6 +80,9 @@ function More() {
           </LinkRow>
           <LinkRow href="/algum-dia" icon={<IconLeaf size={20} />} trailing={someday > 0 && <Count n={someday} />}>
             Algum dia
+          </LinkRow>
+          <LinkRow href="/revisao" icon={<IconWeek size={20} />}>
+            Revisão semanal
           </LinkRow>
           <LinkRow href="/atividade" icon={<IconActivity size={20} />}>
             Atividade

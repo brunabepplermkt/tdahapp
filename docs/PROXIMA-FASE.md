@@ -23,18 +23,13 @@ Em ordem sugerida. Itens marcados com 🔑 precisam de decisão/credencial sua.
 - Banco / Open Finance só bem depois — leitura, nunca movimentação automática.
 
 ## 4. Produto / UX
-- Gestos: deslizar para concluir/adiar nas listas.
-- Modo foco: tela só com o “Agora” + timer.
-- Revisão semanal guiada (10 min): inbox → semana → projetos parados.
+- ✅ Gestos, modo foco, revisão semanal guiada, busca global, edição de projetos com apelidos.
 - Arrastar itens entre dias na Semana.
 - Rotinas com checklist diário leve.
-- Busca global.
-- Edição de projetos (renomear, apelidos para a captura reconhecer).
 - Desfazer mais granular e lixeira.
 
 ## 5. Técnico
-- Testes de componentes/E2E (Playwright) para os fluxos principais.
-- Migrações de versão do `AppData` local (hoje: versão incompatível → recria demo).
+- ✅ E2E (Playwright, iPhone + desktop), CI no GitHub Actions, migração versionada + backups automáticos.
 - Ícones maskable dedicados e splash screens iOS.
 - Telemetria local opcional (sem envio) para calibrar a pontuação do Hoje.
 

@@ -77,6 +77,9 @@ function Week() {
           <Button variant="primary" onClick={organize}>
             <IconSparkle size={18} /> Organizar minha semana
           </Button>
+          <Link href="/revisao" className="text-[14px] font-medium text-accent">
+            Revisão semanal
+          </Link>
           {(view.totals.out > 0 || view.totals.in > 0) && (
             <p className="text-[13px] text-muted tabular-nums">
               {view.totals.out > 0 && <>{formatBRL(view.totals.out, true)} saem</>}

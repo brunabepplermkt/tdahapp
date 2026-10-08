@@ -39,5 +39,9 @@ No iPhone: abra no Safari → Compartilhar → **Adicionar à Tela de Início**.
 - **Decisões** — Aprovar / Editar / Adiar / Ignorar. Sugestões do assistente local caem aqui.
 - **Projetos** — onde estou, próxima ação, pendências, prazo, notas.
 - **Finanças** — contas, despesas, recebimentos, recorrência; a pagar / pago / a receber / recebido / saldo previsto.
+- **Modo foco** — só o “Agora” na tela, timer de 15/25/45 min, Feito / Pular / Amanhã.
+- **Revisão semanal guiada** — 5 passos curtos: Inbox, atrasados, projetos, esquecidos, próxima semana.
+- **Busca global** (lupa no Hoje ou tecla `/`) — itens, projetos, notas e capturas, sem se preocupar com acentos.
+- **Gestos** — deslizar para a direita conclui, para a esquerda adia para amanhã.
 
 Documentação: [docs/ARQUITETURA.md](docs/ARQUITETURA.md) · [docs/PROXIMA-FASE.md](docs/PROXIMA-FASE.md)

@@ -73,7 +73,14 @@ function Today() {
 
       {/* AGORA */}
       {first ? (
-        <Section title="Agora">
+        <Section
+          title="Agora"
+          action={
+            <Link href="/foco" className="text-[13px] font-medium text-accent">
+              Modo foco
+            </Link>
+          }
+        >
           <NowCard entry={first} today={today} />
         </Section>
       ) : (
