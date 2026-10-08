@@ -20,9 +20,10 @@ const ctx = { today, projects };
 
 describe("splitClauses", () => {
   it("separa por ' e ' seguido de verbo", () => {
-    expect(
-      splitClauses("lembrar de pagar a hospedagem da VPS sexta e ver por que o webhook está falhando"),
-    ).toEqual(["lembrar de pagar a hospedagem da VPS sexta", "ver por que o webhook está falhando"]);
+    expect(splitClauses("lembrar de pagar a hospedagem da VPS sexta e ver por que o webhook está falhando")).toEqual([
+      "lembrar de pagar a hospedagem da VPS sexta",
+      "ver por que o webhook está falhando",
+    ]);
   });
   it("não separa 'e' comum", () => {
     expect(splitClauses("comprar arroz e feijão")).toEqual(["comprar arroz e feijão"]);
@@ -63,10 +64,7 @@ describe("extractDate", () => {
 
 describe("interpretText", () => {
   it("exemplo principal: duas tarefas, conta com prazo + tarefa de trabalho", () => {
-    const r = interpretText(
-      "lembrar de pagar a hospedagem da VPS sexta e ver por que o webhook está falhando",
-      ctx,
-    );
+    const r = interpretText("lembrar de pagar a hospedagem da VPS sexta e ver por que o webhook está falhando", ctx);
     expect(r.drafts).toHaveLength(2);
     const [a, b] = r.drafts;
     expect(a.kind).toBe("bill");
@@ -153,5 +151,48 @@ describe("pessoas e ideias", () => {
   it("ideia com dois pontos limpa o título", () => {
     const d = interpretText("ideia para o Zeloa: onboarding por voz", ctx).drafts[0];
     expect(d.title).toBe("Onboarding por voz");
+  });
+});
+
+describe("mais formas de falar de tempo", () => {
+  it("daqui 15 dias / daqui a 2 semanas / em 3 dias", () => {
+    expect(extractDate("renovar seguro daqui 15 dias", today).value?.date).toBe("2026-10-23");
+    expect(extractDate("revisar contrato daqui a 2 semanas", today).value?.date).toBe("2026-10-22");
+    expect(extractDate("ligar em 3 dias", today).value?.date).toBe("2026-10-11");
+    expect(extractDate("trocar óleo daqui a um mês", today).value?.date).toBe("2026-11-08");
+  });
+  it("mês que vem → dia 1 do próximo mês", () => {
+    expect(extractDate("planejar férias mês que vem", today).value?.date).toBe("2026-11-01");
+  });
+  it("à tarde / depois do almoço viram hoje e saem do título", () => {
+    const d = interpretText("ligar pro banco depois do almoço", ctx).drafts[0];
+    expect(d.scheduledDate).toBe(today);
+    expect(d.title).toBe("Ligar pro banco");
+    const e = interpretText("amanhã à tarde levar o carro na revisão", ctx).drafts[0];
+    expect(e.scheduledDate).toBe("2026-10-09");
+    expect(e.title).toBe("Levar o carro na revisão");
+  });
+  it("às 9 sem 'h'", () => {
+    const d = interpretText("reunião com cliente amanhã às 9", ctx).drafts[0];
+    expect(d).toMatchObject({ kind: "event", startTime: "09:00", scheduledDate: "2026-10-09" });
+  });
+  it("não confunde quantidade com hora", () => {
+    expect(interpretText("comprar 2 pacotes de café", ctx).drafts[0].startTime ?? null).toBeNull();
+  });
+});
+
+describe("data no começo da frase", () => {
+  const text = "sexta preciso pagar a VPS e terminar o checkout do Beds24";
+  it("vale para as duas cláusulas e limpa o 'preciso'", () => {
+    const r = interpretText(text, ctx);
+    expect(r.drafts).toHaveLength(2);
+    expect(r.drafts[0]).toMatchObject({ title: "Pagar a VPS", kind: "bill", dueDate: "2026-10-09" });
+    expect(r.drafts[1]).toMatchObject({ title: "Terminar o checkout do Beds24", projectId: "p2", scheduledDate: "2026-10-09" });
+  });
+  it("frase única também", () => {
+    const r = interpretText("amanhã preciso ligar pro contador", ctx);
+    expect(r.drafts).toHaveLength(1);
+    expect(r.drafts[0].title).toBe("Ligar pro contador");
+    expect(r.drafts[0].scheduledDate).toBe("2026-10-09");
   });
 });

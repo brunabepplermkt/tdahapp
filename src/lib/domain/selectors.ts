@@ -6,22 +6,10 @@
  * Um item com prazo no mês aparece no Mês; quando a semana chega ele aparece
  * na Semana; no dia (ou quando ganha urgência) entra no Hoje.
  */
-import {
-  addDays,
-  diffDays,
-  isBetween,
-  monthEnd,
-  monthStart,
-  nextOccurrence,
-} from "./dates";
+import { addDays, diffDays, isBetween, monthEnd, monthStart, nextOccurrence } from "./dates";
 import type { AppData, Capture, Decision, ISODate, Item, Project } from "./types";
 
-export const ACTIONABLE_KINDS = new Set<Item["kind"]>([
-  "task",
-  "reminder",
-  "shopping",
-  "routine",
-]);
+export const ACTIONABLE_KINDS = new Set<Item["kind"]>(["task", "reminder", "shopping", "routine"]);
 
 export const MONEY_KINDS = new Set<Item["kind"]>(["bill", "income", "expense"]);
 
@@ -199,13 +187,7 @@ export function selectToday(data: AppData, today: ISODate): TodayView {
     .sort((a, b) => (a.startTime ?? "99").localeCompare(b.startTime ?? "99"));
 
   const money = open
-    .filter(
-      (i) =>
-        isMoney(i) &&
-        !i.money?.settled &&
-        !!i.dueDate &&
-        diffDays(i.dueDate, today) <= 3,
-    )
+    .filter((i) => isMoney(i) && !i.money?.settled && !!i.dueDate && diffDays(i.dueDate, today) <= 3)
     .sort((a, b) => (a.dueDate ?? "").localeCompare(b.dueDate ?? ""))
     .slice(0, 4);
   const moneyIds = new Set(money.map((m) => m.id));
@@ -327,9 +309,7 @@ export function bucketForDay(items: Item[], date: ISODate): DayBucket {
     .sort((a, b) => (a.startTime ?? "99").localeCompare(b.startTime ?? "99"));
   const money = placed.filter((i) => i.kind !== "event" && isMoney(i));
   const rest = placed.filter((i) => i.kind !== "event" && !isMoney(i) && i.kind !== "goal");
-  const deadlines = items.filter(
-    (i) => isOpen(i) && i.dueDate === date && i.scheduledDate && i.scheduledDate !== date,
-  );
+  const deadlines = items.filter((i) => isOpen(i) && i.dueDate === date && i.scheduledDate && i.scheduledDate !== date);
   const load = [...events, ...rest].filter(isOpen).reduce((sum, i) => sum + itemLoad(i), 0);
   return { date, events, items: rest, money, deadlines, load };
 }
@@ -347,7 +327,8 @@ export function selectWeek(data: AppData, days: ISODate[], today: ISODate): Week
         !i.parentId &&
         !i.scheduledDate &&
         ACTIONABLE_KINDS.has(i.kind) &&
-        (!i.dueDate || i.dueDate <= last),
+        // com prazo dentro da semana ele já aparece no dia do prazo; atrasados ficam aqui
+        (!i.dueDate || i.dueDate < first),
     )
     .sort((a, b) => (a.dueDate ?? "9999").localeCompare(b.dueDate ?? "9999"));
 
@@ -358,8 +339,7 @@ export function selectWeek(data: AppData, days: ISODate[], today: ISODate): Week
       const nextAction =
         related
           .filter((i) => i.kind !== "idea")
-          .sort((a, b) => (placementDate(a) ?? "9999").localeCompare(placementDate(b) ?? "9999"))[0] ??
-        null;
+          .sort((a, b) => (placementDate(a) ?? "9999").localeCompare(placementDate(b) ?? "9999"))[0] ?? null;
       const thisWeek = related.some((i) => {
         const d = placementDate(i);
         return d && isBetween(d, first, last);
@@ -520,16 +500,17 @@ export function selectMonth(data: AppData, anyDayInMonth: ISODate, today: ISODat
     .filter((i) => {
       if (!isOpen(i)) return false;
       const d = i.dueDate ?? (i.kind === "event" ? i.scheduledDate : null);
-      if (!d || d < today || d > horizon) return false;
+      // a partir de amanhã: hoje já está na tela Hoje
+      if (!d || d <= today || d > horizon) return false;
       return (
         i.priority === "high" ||
-        i.kind === "event" ||
-        (i.money && i.money.amountCents >= 50000) ||
-        !!i.projectId
+        (i.kind === "event" && !!i.people?.length) ||
+        (!!i.money && i.money.amountCents >= 50000) ||
+        (!!i.projectId && !!i.dueDate && !i.money)
       );
     })
     .sort((a, b) => (a.dueDate ?? a.scheduledDate ?? "").localeCompare(b.dueDate ?? b.scheduledDate ?? ""))
-    .slice(0, 6);
+    .slice(0, 5);
 
   return {
     start,
@@ -543,7 +524,8 @@ export function selectMonth(data: AppData, anyDayInMonth: ISODate, today: ISODat
       (p) => p.status === "active" && p.deadline && isBetween(p.deadline, start, addDays(end, 30)),
     ),
     upcoming,
-    unscheduledCount: items.filter((i) => isOpen(i) && !placementDate(i) && ACTIONABLE_KINDS.has(i.kind) && !i.parentId).length,
+    unscheduledCount: items.filter((i) => isOpen(i) && !placementDate(i) && ACTIONABLE_KINDS.has(i.kind) && !i.parentId)
+      .length,
   };
 }
 
@@ -553,10 +535,7 @@ export function selectMonth(data: AppData, anyDayInMonth: ISODate, today: ISODat
 
 export function inboxCaptures(captures: Capture[], today: ISODate): Capture[] {
   return captures
-    .filter(
-      (c) =>
-        c.status === "inbox" || (c.status === "snoozed" && (!c.snoozedUntil || c.snoozedUntil <= today)),
-    )
+    .filter((c) => c.status === "inbox" || (c.status === "snoozed" && (!c.snoozedUntil || c.snoozedUntil <= today)))
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
@@ -566,10 +545,7 @@ export function inboxCaptures(captures: Capture[], today: ISODate): Capture[] {
  */
 export function pendingDecisions(decisions: Decision[], today: ISODate, items?: Item[]): Decision[] {
   return decisions
-    .filter(
-      (d) =>
-        d.status === "pending" || (d.status === "snoozed" && (!d.snoozedUntil || d.snoozedUntil <= today)),
-    )
+    .filter((d) => d.status === "pending" || (d.status === "snoozed" && (!d.snoozedUntil || d.snoozedUntil <= today)))
     .filter((d) => {
       if (!items || !d.itemId) return true;
       const item = items.find((i) => i.id === d.itemId);
@@ -588,21 +564,21 @@ export interface ProjectSummary {
 
 export function summarizeProject(data: AppData, project: Project, today: ISODate): ProjectSummary {
   const related = data.items.filter((i) => i.projectId === project.id && !i.parentId);
-  const open = related
-    .filter(isOpen)
-    .sort((a, b) => {
-      const pa = a.priority === "high" ? 0 : 1;
-      const pb = b.priority === "high" ? 0 : 1;
-      if (pa !== pb) return pa - pb;
-      return (placementDate(a) ?? "9999").localeCompare(placementDate(b) ?? "9999");
-    });
+  const open = related.filter(isOpen).sort((a, b) => {
+    const pa = a.priority === "high" ? 0 : 1;
+    const pb = b.priority === "high" ? 0 : 1;
+    if (pa !== pb) return pa - pb;
+    return (placementDate(a) ?? "9999").localeCompare(placementDate(b) ?? "9999");
+  });
   const firstActionable = open.find((i) => i.kind !== "idea" && i.kind !== "event") ?? null;
   const nextAction = firstActionable ? (nextStep(data.items, firstActionable) ?? firstActionable) : null;
   return {
     project,
     nextAction,
     open,
-    done: related.filter((i) => i.status === "done").sort((a, b) => (b.completedAt ?? "").localeCompare(a.completedAt ?? "")),
+    done: related
+      .filter((i) => i.status === "done")
+      .sort((a, b) => (b.completedAt ?? "").localeCompare(a.completedAt ?? "")),
     overdue: open.filter((i) => isOverdue(i, today)).length,
   };
 }

@@ -2,7 +2,7 @@
  * Agente local baseado em regras (o “observador”).
  *
  * Roda quando o app abre/dados mudam e PROPÕE ações como agente
- * (actor = "agent"). Como todas as WRITE tools exigem confirmação quando
+ * (origem = "automation"). Como todas as WRITE tools exigem confirmação quando
  * chamadas por agente, cada proposta vira uma decisão na fila — nada muda sem
  * você aprovar. Um agente LLM futuro entra exatamente no mesmo ponto.
  */
@@ -11,7 +11,7 @@ import { formatBRL } from "@/lib/domain/money";
 import { isOpen, summarizeProject } from "@/lib/domain/selectors";
 import type { AppData, ISODate } from "@/lib/domain/types";
 import { suggestSteps } from "./breakdown";
-import { executeTool } from "./tools";
+import { executeTool } from "@/lib/tools";
 
 export function runAgentRules(data: AppData, today: ISODate): AppData {
   let next = data;
@@ -32,7 +32,7 @@ export function runAgentRules(data: AppData, today: ISODate): AppData {
       next,
       { tool: "mark_paid", input: { itemId: bill.id } },
       {
-        actor: "agent",
+        origin: "automation",
         ctx,
         decision: {
           kind: "pay",
@@ -57,7 +57,7 @@ export function runAgentRules(data: AppData, today: ISODate): AppData {
       next,
       { tool: "add_steps", input: { itemId: item.id, steps } },
       {
-        actor: "agent",
+        origin: "automation",
         ctx,
         decision: {
           kind: "agent_suggestion",
@@ -90,7 +90,7 @@ export function runAgentRules(data: AppData, today: ISODate): AppData {
         },
       },
       {
-        actor: "agent",
+        origin: "automation",
         ctx,
         decision: {
           kind: "agent_suggestion",
@@ -118,7 +118,7 @@ export function runAgentRules(data: AppData, today: ISODate): AppData {
         next,
         { tool: "schedule_item", input: { itemId: b.id, date: to } },
         {
-          actor: "agent",
+          origin: "automation",
           ctx,
           decision: {
             kind: "choose_date",

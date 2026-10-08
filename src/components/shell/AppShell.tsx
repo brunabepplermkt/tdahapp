@@ -1,0 +1,264 @@
+"use client";
+
+import clsx from "clsx";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Suspense, useEffect, type ReactNode } from "react";
+import { inboxCaptures, pendingDecisions } from "@/lib/domain/selectors";
+import { useApp } from "@/lib/hooks/useApp";
+import { useTodayTicker } from "@/lib/hooks/useToday";
+import { useStore } from "@/lib/store/store";
+import { useUI } from "@/lib/store/ui";
+import { CaptureSheet } from "@/components/capture/CaptureSheet";
+import { ItemSheet } from "@/components/items/ItemSheet";
+import { SearchSheet } from "@/components/search/SearchSheet";
+import {
+  IconDecision,
+  IconFolder,
+  IconInbox,
+  IconMonth,
+  IconMore,
+  IconPlus,
+  IconSearch,
+  IconToday,
+  IconWallet,
+  IconWeek,
+} from "@/components/ui/icons";
+import { Toast } from "@/components/ui/Toast";
+
+const MOBILE_NAV = [
+  { href: "/", label: "Hoje", icon: IconToday },
+  { href: "/semana", label: "Semana", icon: IconWeek },
+  { href: "/mes", label: "Mês", icon: IconMonth },
+  { href: "/inbox", label: "Inbox", icon: IconInbox, badge: "inbox" as const },
+  { href: "/mais", label: "Mais", icon: IconMore, badge: "decisions" as const },
+];
+
+const DESKTOP_NAV = [
+  { href: "/", label: "Hoje", icon: IconToday },
+  { href: "/semana", label: "Semana", icon: IconWeek },
+  { href: "/mes", label: "Mês", icon: IconMonth },
+  { href: "/inbox", label: "Inbox", icon: IconInbox, badge: "inbox" as const },
+  {
+    href: "/decisoes",
+    label: "Decisões",
+    icon: IconDecision,
+    badge: "decisions" as const,
+  },
+  { href: "/projetos", label: "Projetos", icon: IconFolder },
+  { href: "/financas", label: "Finanças", icon: IconWallet },
+];
+
+function isActive(pathname: string, href: string) {
+  return href === "/" ? pathname === "/" : pathname.startsWith(href);
+}
+
+type Badges = { inbox: number; decisions: number };
+
+/** usePathname precisa de Suspense em rotas dinâmicas; o fallback é a nav sem item ativo. */
+function WithPath({ render }: { render: (pathname: string) => ReactNode }) {
+  return (
+    <Suspense fallback={render("")}>
+      <PathReader render={render} />
+    </Suspense>
+  );
+}
+
+function PathReader({ render }: { render: (pathname: string) => ReactNode }) {
+  return <>{render(usePathname())}</>;
+}
+
+export function AppShell({ children }: { children: ReactNode }) {
+  const hydrate = useStore((s) => s.hydrate);
+  const runAgent = useStore((s) => s.runAgent);
+  const openCapture = useUI((s) => s.openCapture);
+  const openSearch = useUI((s) => s.openSearch);
+  const fabHidden = useUI((s) => s.fabHidden);
+  const { data, today, ready } = useApp();
+  useTodayTicker();
+
+  useEffect(() => {
+    void hydrate();
+  }, [hydrate]);
+
+  // o “agente” local observa os dados e propõe decisões (nunca age sozinho)
+  useEffect(() => {
+    if (!ready) return;
+    const t = setTimeout(() => runAgent(today), 800);
+    return () => clearTimeout(t);
+  }, [ready, today, data.items, runAgent]);
+
+  // atalho de teclado: “n” ou “c” abre a captura
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement;
+      if (el.closest("input, textarea, select, [contenteditable]") || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.key === "n" || e.key === "c") {
+        e.preventDefault();
+        openCapture();
+      } else if (e.key === "/") {
+        e.preventDefault();
+        openSearch();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [openCapture, openSearch]);
+
+  const badges = {
+    inbox: ready ? inboxCaptures(data.captures, today).length : 0,
+    decisions: ready ? pendingDecisions(data.decisions, today, data.items).length : 0,
+  };
+
+  return (
+    <div className="min-h-dvh lg:flex">
+      {/* lateral — desktop */}
+      <aside className="sticky top-0 hidden h-dvh w-72 shrink-0 flex-col px-5 py-8 lg:flex">
+        <Link href="/" className="t-heading mb-8 px-3 text-[28px] text-ink">
+          Leve
+        </Link>
+        <button
+          onClick={openCapture}
+          className="mb-2 flex h-12 items-center gap-3 rounded-full bg-surface px-4 text-left text-[15px] text-muted shadow-soft ring-1 ring-black/[0.04] transition hover:text-ink"
+        >
+          <IconPlus size={18} />
+          <span className="flex-1 truncate">O que está na cabeça?</span>
+          <kbd className="rounded-md border border-line px-1.5 text-[11px] text-faint">N</kbd>
+        </button>
+        <button
+          onClick={openSearch}
+          className="mb-8 flex h-11 items-center gap-3 rounded-full px-4 text-left text-[15px] text-ink-2 hover:bg-surface-2"
+        >
+          <IconSearch size={18} className="text-muted" />
+          <span className="flex-1">Buscar</span>
+          <kbd className="rounded-md border border-line px-1.5 text-[11px] text-faint">/</kbd>
+        </button>
+        <WithPath render={(pathname) => <DesktopNav pathname={pathname} badges={badges} />} />
+        <div className="mt-auto">
+          <WithPath
+            render={(pathname) => (
+              <Link
+                href="/mais"
+                className={clsx(
+                  "flex h-11 items-center gap-3 rounded-full px-4 text-[15px] text-ink-2 hover:bg-surface-2",
+                  isActive(pathname, "/mais") && "bg-surface font-medium text-ink shadow-soft ring-1 ring-black/[0.04]",
+                )}
+              >
+                <IconMore size={18} className="text-muted" />
+                Mais
+              </Link>
+            )}
+          />
+        </div>
+      </aside>
+
+      <main className="mx-auto w-full max-w-xl px-6 pt-[max(env(safe-area-inset-top),12px)] pb-[calc(env(safe-area-inset-bottom)+168px)] lg:max-w-2xl lg:px-10 lg:pb-24">
+        {children}
+      </main>
+
+      {/* captura — mobile: discreta, sempre ao alcance do polegar */}
+      <button
+        onClick={openCapture}
+        aria-label="Capturar algo"
+        tabIndex={fabHidden ? -1 : 0}
+        aria-hidden={fabHidden}
+        className={clsx(
+          "fixed right-5 bottom-[calc(env(safe-area-inset-bottom)+92px)] z-30 inline-flex h-14 w-14 items-center justify-center rounded-full bg-ink text-bg shadow-float transition active:scale-95 lg:hidden",
+          fabHidden && "pointer-events-none scale-75 opacity-0",
+        )}
+      >
+        <IconPlus size={26} strokeWidth={1.75} />
+      </button>
+
+      {/* navegação inferior — mobile: pílula flutuante, aba ativa em coral */}
+      <nav
+        aria-label="Principal"
+        className="fixed inset-x-0 bottom-0 z-30 px-4 pb-[max(env(safe-area-inset-bottom),12px)] lg:hidden"
+      >
+        <WithPath render={(pathname) => <MobileNav pathname={pathname} badges={badges} />} />
+      </nav>
+
+      <CaptureSheet />
+      <SearchSheet />
+      <ItemSheet />
+      <Toast />
+    </div>
+  );
+}
+
+function DesktopNav({ pathname, badges }: { pathname: string; badges: Badges }) {
+  return (
+    <nav className="flex flex-col gap-1">
+      {DESKTOP_NAV.map((n) => {
+        const active = isActive(pathname, n.href);
+        const count = n.badge ? badges[n.badge] : 0;
+        return (
+          <Link
+            key={n.href}
+            href={n.href}
+            className={clsx(
+              "flex h-11 items-center gap-3 rounded-full px-4 text-[15px] transition",
+              active ? "bg-surface font-medium text-ink shadow-soft ring-1 ring-black/[0.04]" : "text-ink-2 hover:bg-surface-2",
+            )}
+          >
+            <n.icon size={18} className={active ? "text-accent-text" : "text-muted"} />
+            <span className="flex-1">{n.label}</span>
+            {count > 0 && <span className="text-[12px] text-muted tabular-nums">{count}</span>}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
+function MobileNav({ pathname, badges }: { pathname: string; badges: Badges }) {
+  return (
+    <div className="mx-auto flex max-w-md gap-1 rounded-full bg-bg/92 p-1.5 shadow-float ring-1 ring-line-strong/60 backdrop-blur-xl">
+      {MOBILE_NAV.map((n) => {
+        const active = isActive(pathname, n.href);
+        const count = n.badge ? badges[n.badge] : 0;
+        return (
+          <Link
+            key={n.href}
+            href={n.href}
+            aria-current={active ? "page" : undefined}
+            className={clsx(
+              "relative flex h-14 flex-1 flex-col items-center justify-center gap-0.5 rounded-full text-[11px] font-medium transition active:scale-95",
+              active ? "bg-accent text-accent-ink" : "text-muted",
+            )}
+          >
+            <span className="relative">
+              <n.icon size={22} strokeWidth={active ? 1.9 : 1.6} />
+              {count > 0 && (
+                <span
+                  className={clsx(
+                    "absolute -top-1.5 -right-3 min-w-[17px] rounded-full px-1 text-center text-[10px] leading-[17px] tabular-nums",
+                    active ? "bg-surface text-ink" : "bg-ink text-bg",
+                  )}
+                >
+                  {count}
+                </span>
+              )}
+            </span>
+            {n.label}
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Mostra um esqueleto calmo até os dados locais carregarem. */
+export function Ready({ children }: { children: ReactNode }) {
+  const { ready } = useApp();
+  if (!ready) {
+    return (
+      <div className="animate-pulse space-y-5 pt-16" aria-busy="true" aria-label="Carregando">
+        <div className="h-12 w-56 rounded-full bg-surface-2" />
+        <div className="h-28 rounded-[28px] bg-surface-2" />
+        <div className="h-44 rounded-[28px] bg-surface-2" />
+      </div>
+    );
+  }
+  return <>{children}</>;
+}

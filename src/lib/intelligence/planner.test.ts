@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildDemoData } from "@/lib/demo/demo-data";
 import { proposeMonthPlan, proposeWeekPlan } from "./planner";
-import { executeTool, runDecisionActions } from "./tools";
+import { executeTool, runDecisionActions } from "@/lib/tools";
 import { pendingDecisions } from "@/lib/domain/selectors";
 
 const today = "2026-10-08";
@@ -33,7 +33,11 @@ describe("tools", () => {
   it("WRITE de agente vira decisão, não executa", () => {
     const data = buildDemoData(today);
     const item = data.items.find((i) => i.title === "Comprar shampoo")!;
-    const r = executeTool(data, { tool: "complete_item", input: { itemId: item.id } }, { actor: "agent", ctx: { today } });
+    const r = executeTool(
+      data,
+      { tool: "complete_item", input: { itemId: item.id } },
+      { origin: "automation", ctx: { today } },
+    );
     expect(r.status).toBe("needs_confirmation");
     expect(r.data.items.find((i) => i.id === item.id)!.status).toBe("open");
     const decision = pendingDecisions(r.data.decisions, today).find((d) => d.itemId === item.id)!;
@@ -44,15 +48,23 @@ describe("tools", () => {
 
   it("ferramentas externas estão bloqueadas", () => {
     const data = buildDemoData(today);
-    const r = executeTool(data, { tool: "pay_bill", input: { itemId: "x" } }, { actor: "user", confirmed: true });
+    const r = executeTool(data, { tool: "pay_bill", input: { itemId: "x" } }, { origin: "user_app", confirmed: true });
     expect(r.status).toBe("error");
   });
 
   it("WRITE do usuário executa direto e registra atividade", () => {
     const data = buildDemoData(today);
     const item = data.items.find((i) => i.title === "Comprar shampoo")!;
-    const r = executeTool(data, { tool: "complete_item", input: { itemId: item.id } }, { actor: "user" });
+    const r = executeTool(data, { tool: "complete_item", input: { itemId: item.id } }, { origin: "user_app" });
     expect(r.status).toBe("ok");
     expect(r.data.activity[0].tool).toBe("complete_item");
+  });
+});
+
+describe("planner — carga", () => {
+  it("não reclama de semana cheia quando há espaço (sem contar prazo duas vezes)", () => {
+    const data = buildDemoData(today);
+    const plan = proposeWeekPlan(data, today, today);
+    expect(plan.warnings.some((w) => w.includes("Ver por que o webhook"))).toBe(false);
   });
 });

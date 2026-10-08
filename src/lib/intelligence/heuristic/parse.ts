@@ -5,7 +5,7 @@
  * pessoas) e explica o que entendeu. Qualquer coisa ambígua fica na Inbox para
  * você confirmar. Um provider LLM pode substituí-lo pela mesma interface.
  */
-import { addDays, fromISODate, monthEnd, toISODate, weekStart } from "@/lib/domain/dates";
+import { addDays, addMonths, fromISODate, monthEnd, monthStart, toISODate, weekStart } from "@/lib/domain/dates";
 import { parseBRL } from "@/lib/domain/money";
 import type {
   Area,
@@ -24,18 +24,52 @@ import type { CaptureInterpreter, InterpretContext } from "../types";
  * ------------------------------------------------------------------------- */
 
 export function normalize(s: string): string {
-  return s
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase();
+  return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 }
 
 const ACTION_VERBS = [
-  "ver", "pagar", "ligar", "responder", "marcar", "agendar", "comprar", "enviar", "mandar",
-  "fazer", "terminar", "olhar", "resolver", "checar", "revisar", "falar", "pedir", "buscar",
-  "levar", "cancelar", "renovar", "atualizar", "organizar", "preparar", "escrever", "criar",
-  "estudar", "ler", "lembrar", "conferir", "cobrar", "receber", "configurar", "testar",
-  "corrigir", "arrumar", "limpar", "trocar", "devolver", "separar", "postar", "publicar",
+  "ver",
+  "pagar",
+  "ligar",
+  "responder",
+  "marcar",
+  "agendar",
+  "comprar",
+  "enviar",
+  "mandar",
+  "fazer",
+  "terminar",
+  "olhar",
+  "resolver",
+  "checar",
+  "revisar",
+  "falar",
+  "pedir",
+  "buscar",
+  "levar",
+  "cancelar",
+  "renovar",
+  "atualizar",
+  "organizar",
+  "preparar",
+  "escrever",
+  "criar",
+  "estudar",
+  "ler",
+  "lembrar",
+  "conferir",
+  "cobrar",
+  "receber",
+  "configurar",
+  "testar",
+  "corrigir",
+  "arrumar",
+  "limpar",
+  "trocar",
+  "devolver",
+  "separar",
+  "postar",
+  "publicar",
 ];
 
 const VERB_RE = ACTION_VERBS.join("|");
@@ -44,7 +78,9 @@ const VERB_RE = ACTION_VERBS.join("|");
 export function splitClauses(text: string): string[] {
   const parts = text
     .split(/\n|;|\s+\+\s+/)
-    .flatMap((p) => p.split(new RegExp(`\\s*(?:,\\s*|\\s+)(?:e|tamb[eé]m|e tamb[eé]m|depois)\\s+(?=(?:${VERB_RE})\\b)`, "i")))
+    .flatMap((p) =>
+      p.split(new RegExp(`\\s*(?:,\\s*|\\s+)(?:e|tamb[eé]m|e tamb[eé]m|depois)\\s+(?=(?:${VERB_RE})\\b)`, "i")),
+    )
     .flatMap((p) => p.split(new RegExp(`,\\s+(?=(?:${VERB_RE})\\b)`, "i")))
     .map((p) => p.trim())
     .filter((p) => p.length > 1);
@@ -102,6 +138,31 @@ function cleanTitle(s: string): string {
  * Datas
  * ------------------------------------------------------------------------- */
 
+const NUMBER_WORDS: Record<string, number> = {
+  um: 1,
+  uma: 1,
+  dois: 2,
+  duas: 2,
+  tres: 3,
+  quatro: 4,
+  cinco: 5,
+  seis: 6,
+  sete: 7,
+  oito: 8,
+  dez: 10,
+  quinze: 15,
+};
+
+/** “de manhã”, “à tarde”, “depois do almoço”… — viram “hoje” se não houver outra data. */
+export function extractPeriod(text: string): Extract<string | null> {
+  const hit = findAndCut(
+    text,
+    /\b(?:hoje\s+)?(?:de\s+manha|pela\s+manha|a\s+tarde|de\s+tarde|a\s+noite|de\s+noite|depois\s+do\s+almoco|antes\s+do\s+almoco|cedo)\b/i,
+  );
+  if (!hit) return { value: null, rest: text };
+  return { value: hit.original.trim(), rest: hit.rest };
+}
+
 const WEEKDAYS: Record<string, number> = {
   domingo: 0,
   segunda: 1,
@@ -138,7 +199,29 @@ interface Extract<T> {
 const DEADLINE_PREFIX = String.raw`(?:at[eé]\s+(?:o\s+|a\s+)?|vence\s+(?:na\s+|no\s+|em\s+)?|vencimento\s+|prazo\s+(?:at[eé]\s+)?)`;
 
 export function extractDate(text: string, today: ISODate): Extract<DateHit | null> {
-  const patterns: { re: RegExp; resolve: (m: RegExpMatchArray) => { date: ISODate; label: string; deadline?: boolean } | null }[] = [
+  const patterns: {
+    re: RegExp;
+    resolve: (m: RegExpMatchArray) => { date: ISODate; label: string; deadline?: boolean } | null;
+  }[] = [
+    {
+      // daqui 15 dias / daqui a 2 semanas / em 3 dias / dentro de um mês
+      re: new RegExp(
+        String.raw`\b(${DEADLINE_PREFIX})?(?:daqui\s+(?:a\s+)?|em\s+|dentro\s+de\s+)(\d{1,3}|um|uma|dois|duas|tres|quatro|cinco|seis|sete|oito|dez|quinze)\s+(dias?|semanas?|mes|meses)\b`,
+        "i",
+      ),
+      resolve: (m) => {
+        const n = /^\d+$/.test(m[2]) ? Number(m[2]) : NUMBER_WORDS[m[2]];
+        if (!n) return null;
+        const unit = m[3].startsWith("dia") ? "dias" : m[3].startsWith("semana") ? "semanas" : "meses";
+        const date =
+          unit === "dias" ? addDays(today, n) : unit === "semanas" ? addDays(today, n * 7) : addMonths(today, n);
+        return { date, label: `daqui ${n} ${n === 1 ? unit.replace(/s$/, "").replace("mese", "mês") : unit}` };
+      },
+    },
+    {
+      re: new RegExp(String.raw`\b(${DEADLINE_PREFIX})?(?:no\s+)?(?:mes\s+que\s+vem|proximo\s+mes)\b`, "i"),
+      resolve: () => ({ date: monthStart(addMonths(today, 1)), label: "mês que vem" }),
+    },
     {
       re: new RegExp(String.raw`\b(${DEADLINE_PREFIX})?depois\s+de\s+amanh[aã]\b`, "i"),
       resolve: () => ({ date: addDays(today, 2), label: "depois de amanhã" }),
@@ -159,7 +242,10 @@ export function extractDate(text: string, today: ISODate): Extract<DateHit | nul
       resolve: () => ({ date: monthEnd(today), label: "até o fim do mês", deadline: true }),
     },
     {
-      re: new RegExp(String.raw`\b(${DEADLINE_PREFIX})?(?:(?:na\s+)?semana\s+que\s+vem|(?:na\s+)?pr[oó]xima\s+semana)\b`, "i"),
+      re: new RegExp(
+        String.raw`\b(${DEADLINE_PREFIX})?(?:(?:na\s+)?semana\s+que\s+vem|(?:na\s+)?pr[oó]xima\s+semana)\b`,
+        "i",
+      ),
       resolve: () => ({ date: addDays(weekStart(today), 7), label: "semana que vem" }),
     },
     {
@@ -219,7 +305,10 @@ export function extractDate(text: string, today: ISODate): Extract<DateHit | nul
 }
 
 export function extractTime(text: string): Extract<string | null> {
-  const hit = findAndCut(text, /\b(?:as?\s+)?(\d{1,2})(?:h(\d{2})?|:(\d{2}))(?:min)?\b/i);
+  const hit =
+    findAndCut(text, /\b(?:as?\s+)?(\d{1,2})(?:h(\d{2})?|:(\d{2}))(?:min)?\b/i) ??
+    // “às 9” (sem “h”) — só com “às”, para não confundir com quantidades
+    findAndCut(text, /\bas\s+(\d{1,2})\b(?!\s*(?:dias?|semanas?|reais|horas?|\/))/i);
   if (!hit) return { value: null, rest: text };
   const h = Number(hit.m[1]);
   const min = Number(hit.m[2] ?? hit.m[3] ?? 0);
@@ -266,13 +355,54 @@ const EVENT_WORDS =
   /\b(reuni[aã]o|consulta|dentista|m[eé]dic[oa]|call|almo[cç]o\s+com|jantar\s+com|caf[eé]\s+com|entrevista|anivers[aá]rio|festa|exame|aula|voo|viagem|evento|encontro)\b/i;
 
 const PERSON_STOP = new Set([
-  "o", "a", "os", "as", "e", "de", "do", "da", "pra", "para", "que", "email", "e-mail", "mensagem",
-  "msg", "whatsapp", "zap", "proposta", "cliente", "hoje", "amanha", "amanhã", "sobre", "ele", "ela",
+  "o",
+  "a",
+  "os",
+  "as",
+  "e",
+  "de",
+  "do",
+  "da",
+  "pra",
+  "para",
+  "que",
+  "email",
+  "e-mail",
+  "mensagem",
+  "msg",
+  "whatsapp",
+  "zap",
+  "proposta",
+  "cliente",
+  "hoje",
+  "amanha",
+  "amanhã",
+  "sobre",
+  "ele",
+  "ela",
 ]);
 
 const NOT_PEOPLE = new Set([
-  "segunda", "terca", "quarta", "quinta", "sexta", "sabado", "domingo", "janeiro", "fevereiro", "marco",
-  "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro", "deus",
+  "segunda",
+  "terca",
+  "quarta",
+  "quinta",
+  "sexta",
+  "sabado",
+  "domingo",
+  "janeiro",
+  "fevereiro",
+  "marco",
+  "abril",
+  "maio",
+  "junho",
+  "julho",
+  "agosto",
+  "setembro",
+  "outubro",
+  "novembro",
+  "dezembro",
+  "deus",
 ]);
 
 export function extractPeople(text: string, projects: Project[] = []): string[] {
@@ -281,7 +411,7 @@ export function extractPeople(text: string, projects: Project[] = []): string[] 
     projects.flatMap((p) => [p.name, ...(p.aliases ?? [])]).flatMap((n) => normalize(n).split(/\s+/)),
   );
   // nomes próprios depois de preposições: “pro Rafael”, “com a Ana”
-  for (const m of text.matchAll(/\b(?:pro|pra|para|com|ao|à|a|o|do|da)\s+(?:o\s+|a\s+)?([A-ZÀ-Ý][a-zà-ÿ]{2,})\b(?![\wà-ÿ])/g)) {
+  for (const m of text.matchAll(/\b(?:pro|pra|para|com|ao|à)\s+(?:o\s+|a\s+)?([A-ZÀ-Ý][a-zà-ÿ]{2,})\b(?![\wà-ÿ])/g)) {
     const n = normalize(m[1]);
     if (NOT_PEOPLE.has(n) || projectWords.has(n) || PERSON_STOP.has(n)) continue;
     people.add(m[1]);
@@ -318,14 +448,18 @@ interface Classification {
   direction?: "in" | "out";
 }
 
-export function classify(text: string, opts: { hasTime: boolean; hasDate: boolean; wasReminder: boolean }): Classification {
+export function classify(
+  text: string,
+  opts: { hasTime: boolean; hasDate: boolean; wasReminder: boolean },
+): Classification {
   const t = normalize(text);
   const has = (re: RegExp) => re.test(t);
 
   if (/^(ideia|idea)\b|\bideia\s+(?:para|pra|de)\b/.test(t)) {
     return { kind: "idea", intent: "idea", area: WORK_WORDS.test(t) ? "work" : "personal" };
   }
-  if (has(/^(?:meta|objetivo)\b/)) return { kind: "goal", intent: "do", area: FINANCE_WORDS.test(t) ? "finance" : "personal" };
+  if (has(/^(?:meta|objetivo)\b/))
+    return { kind: "goal", intent: "do", area: FINANCE_WORDS.test(t) ? "finance" : "personal" };
   if (has(/\b(receber|recebimento|vou\s+receber|entra(?:r)?\s+(?:o\s+)?(?:pagamento|dinheiro))\b/)) {
     return { kind: "income", intent: "receive", area: "finance", direction: "in" };
   }
@@ -372,8 +506,25 @@ function detectPriority(text: string): { priority: Priority; rest: string } {
  * Interpretação completa
  * ------------------------------------------------------------------------- */
 
+/**
+ * “sexta preciso pagar a VPS e terminar o checkout” — a data vem ANTES do
+ * “preciso”. Separa essa data inicial (vale para a frase toda) do resto.
+ */
+const LEADING_DATE_RE = /^(.{2,24}?)\s+(?=(?:eu\s+)?(?:preciso|tenho que|tenho de|devo|quero|vou|precisa)\b)/i;
+
+export function splitLeadingDate(text: string, today: ISODate): { hit: DateHit; rest: string } | null {
+  const m = text.match(LEADING_DATE_RE);
+  if (!m) return null;
+  const found = extractDate(m[1], today);
+  if (!found.value || found.rest.trim()) return null;
+  return { hit: found.value, rest: text.slice(m[0].length) };
+}
+
 export function interpretText(raw: string, ctx: InterpretContext): Interpretation {
-  const text = raw.normalize("NFC").trim();
+  let text = raw.normalize("NFC").trim();
+  const lead = splitLeadingDate(text, ctx.today);
+  // a data inicial vai para o fim da primeira cláusula e vale para as seguintes sem data própria
+  if (lead) text = `${lead.rest} ${text.slice(0, text.length - lead.rest.length).trim()}`.trim();
   const clauses = splitClauses(text);
   const notes: string[] = [];
   const drafts: ItemDraft[] = [];
@@ -397,6 +548,12 @@ export function interpretText(raw: string, ctx: InterpretContext): Interpretatio
     rest = time.rest;
     const date = extractDate(rest, ctx.today);
     rest = date.rest;
+    const period = extractPeriod(rest);
+    rest = period.rest;
+    if (!date.value && period.value) {
+      date.value = { date: ctx.today, isDeadline: false, label: period.value.toLowerCase() };
+    }
+    if (!date.value && lead && clauses.length > 1) date.value = lead.hit;
 
     const cls = classify(base, { hasTime: !!time.value, hasDate: !!date.value, wasReminder });
     const project = matchProject(clause, ctx.projects) ?? (clauses.length === 1 ? sharedProject : null);
@@ -441,7 +598,9 @@ export function interpretText(raw: string, ctx: InterpretContext): Interpretatio
     }
     if (rec.value) {
       draft.recurrence = { freq: rec.value };
-      notes.push(`Repete: ${{ daily: "todo dia", weekly: "toda semana", monthly: "todo mês", yearly: "todo ano" }[rec.value]}`);
+      notes.push(
+        `Repete: ${{ daily: "todo dia", weekly: "toda semana", monthly: "todo mês", yearly: "todo ano" }[rec.value]}`,
+      );
     }
     if (project) notes.push(`Projeto: ${project.name}`);
     if (draft.people?.length) notes.push(`Pessoa: ${draft.people.join(", ")}`);

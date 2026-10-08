@@ -5,15 +5,7 @@
  * você desmarca o que não quiser e só então eles viram chamadas da WRITE tool
  * `schedule_item`, registradas na atividade.
  */
-import {
-  addDays,
-  fromISODate,
-  isWeekend,
-  monthEnd,
-  relativeDay,
-  weekDays,
-  weekStart,
-} from "@/lib/domain/dates";
+import { addDays, fromISODate, isWeekend, monthEnd, relativeDay, weekDays, weekStart } from "@/lib/domain/dates";
 import { formatBRL } from "@/lib/domain/money";
 import {
   ACTIONABLE_KINDS,
@@ -72,7 +64,9 @@ function eventConflicts(items: Item[], day: ISODate): string[] {
     const cur = events[k];
     const prevEnd = prev.endTime ?? prev.startTime!;
     if (cur.startTime! < prevEnd || cur.startTime === prev.startTime) {
-      out.push(`Conflito em ${day.slice(8, 10)}/${day.slice(5, 7)}: “${prev.title}” e “${cur.title}” se sobrepõem às ${cur.startTime}.`);
+      out.push(
+        `Conflito em ${day.slice(8, 10)}/${day.slice(5, 7)}: “${prev.title}” e “${cur.title}” se sobrepõem às ${cur.startTime}.`,
+      );
     }
   }
   return out;
@@ -115,7 +109,8 @@ export function proposeWeekPlan(data: AppData, anyDayInWeek: ISODate, today: ISO
   for (const d of days) {
     const b = bucketForDay(data.items, d);
     const eventsLoad = b.events.filter(isOpen).reduce((s, e) => s + itemLoad(e), 0);
-    const tasksLoad = b.items.filter(isOpen).reduce((s, e) => s + itemLoad(e), 0);
+    // só o que já está PLANEJADO para o dia; itens que só têm prazo ali ainda serão distribuídos
+    const tasksLoad = b.items.filter((i) => isOpen(i) && i.scheduledDate === d).reduce((s, e) => s + itemLoad(e), 0);
     remaining.set(d, capacity(d) - tasksLoad - eventsLoad * 0.5);
     if (eventsLoad >= 240) {
       warnings.push(
@@ -184,15 +179,16 @@ export function proposeWeekPlan(data: AppData, anyDayInWeek: ISODate, today: ISO
       best = pool.find((d) => remaining.get(d)! >= load) ?? null;
     } else {
       // sem prazo: o dia mais folgado (espalha em vez de lotar a segunda)
-      best =
-        [...pool].sort((a, b) => remaining.get(b)! - remaining.get(a)! || a.localeCompare(b))[0] ?? null;
+      best = [...pool].sort((a, b) => remaining.get(b)! - remaining.get(a)! || a.localeCompare(b))[0] ?? null;
       if (best && remaining.get(best)! < load) best = null;
     }
 
     if (!best) {
       if (urgent) {
         best = pool[0] ?? today;
-        warnings.push(`“${item.title}” tem prazo, mas a semana está cheia. Coloquei ${relativeDay(best, today)} mesmo assim.`);
+        warnings.push(
+          `“${item.title}” tem prazo, mas a semana está cheia. Coloquei ${relativeDay(best, today)} mesmo assim.`,
+        );
       } else {
         leftOut.push({ itemId: item.id, title: item.title });
         continue;
@@ -257,18 +253,19 @@ export function proposeMonthPlan(data: AppData, anyDayInMonth: ISODate, today: I
   for (const item of data.items
     .filter(
       (i) =>
-        isOpen(i) &&
-        !i.money &&
-        ACTIONABLE_KINDS.has(i.kind) &&
-        !i.scheduledDate &&
-        !i.parentId &&
-        inMonth(i.dueDate),
+        isOpen(i) && !i.money && ACTIONABLE_KINDS.has(i.kind) && !i.scheduledDate && !i.parentId && inMonth(i.dueDate),
     )
     .sort(candidateOrder(today))) {
     const lead = (item.estimateMin ?? 30) >= 120 || data.items.some((c) => c.parentId === item.id) ? 5 : 2;
     let to = businessDayOnOrBefore(addDays(item.dueDate!, -lead));
     if (to < today) to = today;
-    moves.push({ itemId: item.id, title: item.title, from: null, to, reason: `Prazo dia ${Number(item.dueDate!.slice(8, 10))} — começar com folga` });
+    moves.push({
+      itemId: item.id,
+      title: item.title,
+      from: null,
+      to,
+      reason: `Prazo dia ${Number(item.dueDate!.slice(8, 10))} — começar com folga`,
+    });
   }
 
   // 3) itens sem data: distribuir pelas semanas restantes (segunda de cada semana)
@@ -279,7 +276,9 @@ export function proposeMonthPlan(data: AppData, anyDayInMonth: ISODate, today: I
   }
   const perWeek = new Map(weeks.map((w) => [w, 0]));
   const undated = data.items
-    .filter((i) => isOpen(i) && ACTIONABLE_KINDS.has(i.kind) && !i.money && !i.parentId && !i.scheduledDate && !i.dueDate)
+    .filter(
+      (i) => isOpen(i) && ACTIONABLE_KINDS.has(i.kind) && !i.money && !i.parentId && !i.scheduledDate && !i.dueDate,
+    )
     .sort(candidateOrder(today));
   for (const item of undated) {
     if (moves.length >= MAX_MOVES_MONTH) {
@@ -305,7 +304,9 @@ export function proposeMonthPlan(data: AppData, anyDayInMonth: ISODate, today: I
   // avisos
   const month = selectMonth(data, anyDayInMonth, today);
   if (month.money.forecast < 0) {
-    warnings.push(`Saldo previsto do mês está negativo (${formatBRL(month.money.forecast)}). Vale olhar despesas que podem esperar.`);
+    warnings.push(
+      `Saldo previsto do mês está negativo (${formatBRL(month.money.forecast)}). Vale olhar despesas que podem esperar.`,
+    );
   }
   for (const p of data.projects.filter((p) => p.status === "active")) {
     const s = summarizeProject(data, p, today);
