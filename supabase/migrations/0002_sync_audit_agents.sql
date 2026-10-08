@@ -13,10 +13,39 @@
 alter table items add column history jsonb not null default '[]';
 alter table captures add column item_ids uuid[] not null default '{}';
 
+-- O app local usa ids de texto (ex.: itm_…). A migração local → remoto grava o id remoto como
+-- UUID DETERMINÍSTICO derivado de (usuário, id local) — repetir a migração faz upsert nas mesmas
+-- linhas — e guarda o id original em local_id para a volta ser sem perda.
+alter table items alter column series_id type text using series_id::text;
+alter table projects  add column local_id text;
+alter table captures  add column local_id text;
+alter table items     add column local_id text;
+alter table notes     add column local_id text;
+alter table decisions add column local_id text;
+create unique index projects_local_id  on projects  (user_id, local_id) where local_id is not null;
+create unique index captures_local_id  on captures  (user_id, local_id) where local_id is not null;
+create unique index items_local_id     on items     (user_id, local_id) where local_id is not null;
+create unique index notes_local_id     on notes     (user_id, local_id) where local_id is not null;
+create unique index decisions_local_id on decisions (user_id, local_id) where local_id is not null;
+
+-- O trigger de 0001 sobrescrevia updated_at com a hora do servidor em TODO update, o que faria
+-- cada envio parecer uma edição nova e distorceria o desempate "último a escrever vence".
+-- Agora: se o cliente já informou um updated_at novo, ele é respeitado; edição direta em SQL
+-- (conteúdo mudou mas updated_at não) continua carimbada pelo servidor; reenviar a mesma linha não muda nada.
+create or replace function set_updated_at() returns trigger language plpgsql as $$
+begin
+  if new.updated_at is not distinct from old.updated_at
+     and (to_jsonb(new) - 'updated_at') is distinct from (to_jsonb(old) - 'updated_at') then
+    new.updated_at = now();
+  end if;
+  return new;
+end $$;
+
 -- 2) auditoria ------------------------------------------------------------------
 create table audit_log (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null default auth.uid() references auth.users on delete cascade,
+  local_id text,
   origin text not null default 'user_app'
     check (origin in ('user_app', 'automation', 'agent', 'import')),
   actor actor not null,
@@ -45,6 +74,7 @@ drop table agent_activity;
 -- a mesma chave de idempotência só pode ter UM resultado aceito/proposto por usuário
 create unique index audit_log_idem on audit_log (user_id, idempotency_key)
   where idempotency_key is not null and status in ('ok', 'proposed');
+create unique index audit_log_local_id on audit_log (user_id, local_id) where local_id is not null;
 create index audit_log_user_at on audit_log (user_id, at desc);
 
 alter table audit_log enable row level security;

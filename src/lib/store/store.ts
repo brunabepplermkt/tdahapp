@@ -14,6 +14,7 @@ import { buildDemoData, emptyData } from "@/lib/demo/demo-data";
 import { getInterpreter, runAgentRules } from "@/lib/intelligence";
 import { executeTool, runDecisionActions } from "@/lib/tools";
 import type { PlanMove } from "@/lib/intelligence";
+import { bindSyncHooks, useSync } from "@/lib/sync/controller";
 import { repository } from "./repository";
 
 export interface Toast {
@@ -63,6 +64,7 @@ async function snapshot(reason: string, data: AppData) {
  */
 function persist(data: AppData) {
   void repository.save(data);
+  useSync.getState().onLocalChange(); // no-op sem conta/migração
 }
 
 export const useStore = create<StoreState>((set, get) => ({
@@ -79,6 +81,7 @@ export const useStore = create<StoreState>((set, get) => ({
       await repository.save(data);
     }
     set({ data, hydrated: true });
+    void useSync.getState().init();
   },
 
   apply(fn, toast, undoable = true) {
@@ -248,3 +251,13 @@ export const useStore = create<StoreState>((set, get) => ({
     return true;
   },
 }));
+
+// o controlador de sincronização enxerga a store só por estas funções (sem import circular)
+bindSyncHooks({
+  getData: () => useStore.getState().data,
+  setData: (data) => {
+    useStore.setState({ data });
+    void repository.save(data);
+  },
+  backup: (reason) => repository.backup(reason),
+});

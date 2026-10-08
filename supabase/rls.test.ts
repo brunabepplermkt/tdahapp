@@ -1,50 +1,17 @@
-/**
- * Testa as migrations num Postgres de verdade (PGlite, em memória) — nada de Supabase real.
- * Simula o que o Supabase faz: schema `auth`, `auth.uid()` lendo o JWT e o papel `authenticated`.
- */
-import { readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
-import { PGlite } from "@electric-sql/pglite";
-import { pgcrypto } from "@electric-sql/pglite/contrib/pgcrypto";
+/** Testa as migrations num Postgres de verdade (PGlite, em memória) — nada de Supabase real. */
+import type { PGlite } from "@electric-sql/pglite";
 import { beforeAll, describe, expect, it } from "vitest";
+import { asUser as asUserOn, createDb } from "./harness";
 
 const A = "00000000-0000-4000-8000-00000000000a";
 const B = "00000000-0000-4000-8000-00000000000b";
 const ITEM_A = "11111111-1111-4111-8111-111111111111";
 
 let db: PGlite;
-
-async function asUser(uid: string | null) {
-  await db.exec("reset role");
-  if (uid) {
-    await db.exec(`select set_config('request.jwt.claim.sub', '${uid}', false); set role authenticated;`);
-  } else {
-    await db.exec(`select set_config('request.jwt.claim.sub', '', false); set role anon;`);
-  }
-}
+const asUser = (uid: string | null) => asUserOn(db, uid);
 
 beforeAll(async () => {
-  db = new PGlite({ extensions: { pgcrypto } });
-  await db.exec(`
-    create role anon nologin; create role authenticated nologin;
-    create schema auth;
-    create table auth.users (id uuid primary key);
-    create function auth.uid() returns uuid language sql stable as
-      $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
-    grant usage on schema auth to anon, authenticated;
-    grant execute on function auth.uid() to anon, authenticated;
-    insert into auth.users values ('${A}'), ('${B}');
-  `);
-  const dir = join(__dirname, "migrations");
-  for (const f of readdirSync(dir).filter((x) => x.endsWith(".sql")).sort()) {
-    await db.exec(readFileSync(join(dir, f), "utf8"));
-  }
-  // o Supabase concede isto por padrão; a RLS é que protege
-  await db.exec(`
-    grant usage on schema public to anon, authenticated;
-    grant all on all tables in schema public to anon, authenticated;
-    grant all on all sequences in schema public to anon, authenticated;
-  `);
+  db = await createDb([A, B]);
 });
 
 describe("migrations + RLS (Postgres real em memória)", () => {
@@ -145,5 +112,21 @@ describe("migrations + RLS (Postgres real em memória)", () => {
     await db.query("insert into agent_grants (name, origin, allowed_tools) values ('hermes','agent','{get_today}')");
     await asUser(B);
     expect((await db.query("select * from agent_grants")).rows).toHaveLength(0);
+  });
+});
+
+describe("carimbo de updated_at (trigger)", () => {
+  it("respeita o updated_at do cliente, ignora reenvio idêntico e carimba edição direta", async () => {
+    await asUser(A);
+    const id = "33333333-3333-4333-8333-333333333333";
+    await db.query("insert into projects (id, name, updated_at) values ($1, 'P', '2026-01-01T00:00:00Z')", [id]);
+    const get = async () => (await db.query<{ u: string }>("select updated_at::text as u from projects where id=$1", [id])).rows[0].u;
+    const t0 = await get();
+    await db.query("update projects set name='P' where id=$1", [id]); // nada mudou
+    expect(await get()).toBe(t0);
+    await db.query("update projects set name='Q', updated_at='2026-02-02T00:00:00Z' where id=$1", [id]); // cliente informou
+    expect(await get()).toContain("2026-02-02");
+    await db.query("update projects set name='R' where id=$1", [id]); // edição direta
+    expect(await get()).not.toContain("2026-02-02");
   });
 });

@@ -7,6 +7,7 @@ import { listInterpreters } from "@/lib/intelligence";
 import { toolManifest } from "@/lib/tools";
 import { repository, type BackupInfo } from "@/lib/store/repository";
 import { useStore } from "@/lib/store/store";
+import { CloudSection } from "@/components/account/CloudSection";
 import { Ready } from "@/components/shell/AppShell";
 import { IconActivity, IconDecision, IconFolder, IconLeaf, IconWallet, IconWeek } from "@/components/ui/icons";
 import { Button, Collapsible, Group, LinkRow, PageHeader, Section } from "@/components/ui/primitives";
@@ -20,7 +21,7 @@ export default function MorePage() {
 }
 
 const INTEGRATIONS = [
-  { name: "Supabase (sincronizar entre aparelhos)", status: "Preparado, não configurado" },
+  { name: "Supabase (sincronizar entre aparelhos)", status: "Preparado, não configurado (veja Conta e nuvem)" },
   { name: "IA para interpretar capturas", status: "Interface pronta, sem chave" },
   { name: "Google Calendar", status: "Não conectado" },
   { name: "Gmail", status: "Não conectado" },
@@ -147,6 +148,8 @@ function More() {
           </div>
         )}
       </Section>
+
+      <CloudSection />
 
       <Section title="Integrações" hint="Nada externo está conectado. Cada uma exigirá sua autorização explícita.">
         <Group>
