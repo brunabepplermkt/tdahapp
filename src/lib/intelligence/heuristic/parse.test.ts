@@ -153,3 +153,30 @@ describe("pessoas e ideias", () => {
     expect(d.title).toBe("Onboarding por voz");
   });
 });
+
+describe("mais formas de falar de tempo", () => {
+  it("daqui 15 dias / daqui a 2 semanas / em 3 dias", () => {
+    expect(extractDate("renovar seguro daqui 15 dias", today).value?.date).toBe("2026-10-23");
+    expect(extractDate("revisar contrato daqui a 2 semanas", today).value?.date).toBe("2026-10-22");
+    expect(extractDate("ligar em 3 dias", today).value?.date).toBe("2026-10-11");
+    expect(extractDate("trocar óleo daqui a um mês", today).value?.date).toBe("2026-11-08");
+  });
+  it("mês que vem → dia 1 do próximo mês", () => {
+    expect(extractDate("planejar férias mês que vem", today).value?.date).toBe("2026-11-01");
+  });
+  it("à tarde / depois do almoço viram hoje e saem do título", () => {
+    const d = interpretText("ligar pro banco depois do almoço", ctx).drafts[0];
+    expect(d.scheduledDate).toBe(today);
+    expect(d.title).toBe("Ligar pro banco");
+    const e = interpretText("amanhã à tarde levar o carro na revisão", ctx).drafts[0];
+    expect(e.scheduledDate).toBe("2026-10-09");
+    expect(e.title).toBe("Levar o carro na revisão");
+  });
+  it("às 9 sem 'h'", () => {
+    const d = interpretText("reunião com cliente amanhã às 9", ctx).drafts[0];
+    expect(d).toMatchObject({ kind: "event", startTime: "09:00", scheduledDate: "2026-10-09" });
+  });
+  it("não confunde quantidade com hora", () => {
+    expect(interpretText("comprar 2 pacotes de café", ctx).drafts[0].startTime ?? null).toBeNull();
+  });
+});

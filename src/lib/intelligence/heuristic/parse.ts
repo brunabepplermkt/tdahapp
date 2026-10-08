@@ -5,7 +5,7 @@
  * pessoas) e explica o que entendeu. Qualquer coisa ambígua fica na Inbox para
  * você confirmar. Um provider LLM pode substituí-lo pela mesma interface.
  */
-import { addDays, fromISODate, monthEnd, toISODate, weekStart } from "@/lib/domain/dates";
+import { addDays, addMonths, fromISODate, monthEnd, monthStart, toISODate, weekStart } from "@/lib/domain/dates";
 import { parseBRL } from "@/lib/domain/money";
 import type {
   Area,
@@ -138,6 +138,31 @@ function cleanTitle(s: string): string {
  * Datas
  * ------------------------------------------------------------------------- */
 
+const NUMBER_WORDS: Record<string, number> = {
+  um: 1,
+  uma: 1,
+  dois: 2,
+  duas: 2,
+  tres: 3,
+  quatro: 4,
+  cinco: 5,
+  seis: 6,
+  sete: 7,
+  oito: 8,
+  dez: 10,
+  quinze: 15,
+};
+
+/** “de manhã”, “à tarde”, “depois do almoço”… — viram “hoje” se não houver outra data. */
+export function extractPeriod(text: string): Extract<string | null> {
+  const hit = findAndCut(
+    text,
+    /\b(?:hoje\s+)?(?:de\s+manha|pela\s+manha|a\s+tarde|de\s+tarde|a\s+noite|de\s+noite|depois\s+do\s+almoco|antes\s+do\s+almoco|cedo)\b/i,
+  );
+  if (!hit) return { value: null, rest: text };
+  return { value: hit.original.trim(), rest: hit.rest };
+}
+
 const WEEKDAYS: Record<string, number> = {
   domingo: 0,
   segunda: 1,
@@ -178,6 +203,25 @@ export function extractDate(text: string, today: ISODate): Extract<DateHit | nul
     re: RegExp;
     resolve: (m: RegExpMatchArray) => { date: ISODate; label: string; deadline?: boolean } | null;
   }[] = [
+    {
+      // daqui 15 dias / daqui a 2 semanas / em 3 dias / dentro de um mês
+      re: new RegExp(
+        String.raw`\b(${DEADLINE_PREFIX})?(?:daqui\s+(?:a\s+)?|em\s+|dentro\s+de\s+)(\d{1,3}|um|uma|dois|duas|tres|quatro|cinco|seis|sete|oito|dez|quinze)\s+(dias?|semanas?|mes|meses)\b`,
+        "i",
+      ),
+      resolve: (m) => {
+        const n = /^\d+$/.test(m[2]) ? Number(m[2]) : NUMBER_WORDS[m[2]];
+        if (!n) return null;
+        const unit = m[3].startsWith("dia") ? "dias" : m[3].startsWith("semana") ? "semanas" : "meses";
+        const date =
+          unit === "dias" ? addDays(today, n) : unit === "semanas" ? addDays(today, n * 7) : addMonths(today, n);
+        return { date, label: `daqui ${n} ${n === 1 ? unit.replace(/s$/, "").replace("mese", "mês") : unit}` };
+      },
+    },
+    {
+      re: new RegExp(String.raw`\b(${DEADLINE_PREFIX})?(?:no\s+)?(?:mes\s+que\s+vem|proximo\s+mes)\b`, "i"),
+      resolve: () => ({ date: monthStart(addMonths(today, 1)), label: "mês que vem" }),
+    },
     {
       re: new RegExp(String.raw`\b(${DEADLINE_PREFIX})?depois\s+de\s+amanh[aã]\b`, "i"),
       resolve: () => ({ date: addDays(today, 2), label: "depois de amanhã" }),
@@ -261,7 +305,10 @@ export function extractDate(text: string, today: ISODate): Extract<DateHit | nul
 }
 
 export function extractTime(text: string): Extract<string | null> {
-  const hit = findAndCut(text, /\b(?:as?\s+)?(\d{1,2})(?:h(\d{2})?|:(\d{2}))(?:min)?\b/i);
+  const hit =
+    findAndCut(text, /\b(?:as?\s+)?(\d{1,2})(?:h(\d{2})?|:(\d{2}))(?:min)?\b/i) ??
+    // “às 9” (sem “h”) — só com “às”, para não confundir com quantidades
+    findAndCut(text, /\bas\s+(\d{1,2})\b(?!\s*(?:dias?|semanas?|reais|horas?|\/))/i);
   if (!hit) return { value: null, rest: text };
   const h = Number(hit.m[1]);
   const min = Number(hit.m[2] ?? hit.m[3] ?? 0);
@@ -484,6 +531,11 @@ export function interpretText(raw: string, ctx: InterpretContext): Interpretatio
     rest = time.rest;
     const date = extractDate(rest, ctx.today);
     rest = date.rest;
+    const period = extractPeriod(rest);
+    rest = period.rest;
+    if (!date.value && period.value) {
+      date.value = { date: ctx.today, isDeadline: false, label: period.value.toLowerCase() };
+    }
 
     const cls = classify(base, { hasTime: !!time.value, hasDate: !!date.value, wasReminder });
     const project = matchProject(clause, ctx.projects) ?? (clauses.length === 1 ? sharedProject : null);
