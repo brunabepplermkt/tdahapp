@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { diffDays, relativeDay } from "@/lib/domain/dates";
+import { addDays, diffDays, relativeDay } from "@/lib/domain/dates";
 import { formatBRL } from "@/lib/domain/money";
 import { isProjected } from "@/lib/domain/selectors";
 import type { ISODate, Item } from "@/lib/domain/types";
@@ -9,6 +9,7 @@ import { useStore } from "@/lib/store/store";
 import { useUI } from "@/lib/store/ui";
 import { IconCheck, IconRepeat } from "@/components/ui/icons";
 import { AreaDot } from "@/components/ui/primitives";
+import { Swipeable } from "./Swipeable";
 
 export function CheckCircle({
   checked,
@@ -103,83 +104,94 @@ export function ItemRow({
   emphasis?: boolean;
 }) {
   const toggleDone = useStore((s) => s.toggleDone);
+  const postpone = useStore((s) => s.postpone);
   const openItem = useUI((s) => s.openItem);
   const meta = useItemMeta(item, { today, showDate, showProject });
   const projected = isProjected(item);
   const done = item.status === "done";
   const money = item.money;
 
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={() => !projected && openItem(parent ? parent.id : item.id)}
-      onKeyDown={(e) => {
-        if ((e.key === "Enter" || e.key === " ") && !projected) {
-          e.preventDefault();
-          openItem(parent ? parent.id : item.id);
-        }
-      }}
-      className={clsx(
-        "flex min-h-14 cursor-pointer items-start gap-3.5 px-4 py-3.5 text-left transition hover:bg-surface-2/60 active:bg-surface-2",
-        projected && "cursor-default opacity-60",
-      )}
-    >
-      {item.kind === "event" ? (
-        <span className="mt-0.5 w-[22px] shrink-0 text-center text-[11px] leading-[22px] font-semibold text-muted tabular-nums">
-          {item.startTime ? item.startTime.slice(0, 2) : "•"}
-        </span>
-      ) : projected ? (
-        <span className="mt-0.5 inline-flex h-[22px] w-[22px] shrink-0 items-center justify-center text-faint">
-          <IconRepeat size={16} />
-        </span>
-      ) : (
-        <span className="mt-0.5">
-          <CheckCircle
-            checked={done}
-            onToggle={() => toggleDone(item.id)}
-            label={money ? (money.direction === "in" ? "Marcar como recebido" : "Marcar como pago") : "Concluir"}
-          />
-        </span>
-      )}
+  const canSwipe = !projected && !done && item.kind !== "event";
 
-      <div className="min-w-0 flex-1">
-        {parent && <p className="mb-0.5 truncate text-[12px] text-muted">Próximo passo de {parent.title}</p>}
-        <p
-          className={clsx(
-            "text-ink",
-            emphasis ? "text-[18px] leading-snug font-semibold tracking-[-0.01em]" : "text-[15px] leading-snug",
-            done && "text-muted line-through decoration-faint",
-          )}
-        >
-          {item.title}
-        </p>
-        {meta.length > 0 && (
-          <p className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[13px] text-muted">
-            <AreaDot area={item.area} className="mr-0.5" />
-            {meta.map((m, i) => (
-              <span key={i} className="inline-flex items-center gap-1.5">
-                {i > 0 && <span className="text-faint">·</span>}
-                <span className={clsx(m.tone === "danger" && "text-danger", m.tone === "warn" && "text-warn")}>
-                  {m.text}
-                </span>
-              </span>
-            ))}
+  return (
+    <Swipeable
+      enabled={canSwipe}
+      rightLabel={money ? (money.direction === "in" ? "Recebido" : "Pago") : "Feito"}
+      leftLabel="Amanhã"
+      onRight={() => toggleDone(item.id)}
+      onLeft={() => postpone(item.id, addDays(today, 1), "amanhã")}
+    >
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => !projected && openItem(parent ? parent.id : item.id)}
+        onKeyDown={(e) => {
+          if ((e.key === "Enter" || e.key === " ") && !projected) {
+            e.preventDefault();
+            openItem(parent ? parent.id : item.id);
+          }
+        }}
+        className={clsx(
+          "flex min-h-14 cursor-pointer items-start gap-3.5 px-4 py-3.5 text-left transition hover:bg-surface-2/60 active:bg-surface-2",
+          projected && "cursor-default opacity-60",
+        )}
+      >
+        {item.kind === "event" ? (
+          <span className="mt-0.5 w-[22px] shrink-0 text-center text-[11px] leading-[22px] font-semibold text-muted tabular-nums">
+            {item.startTime ? item.startTime.slice(0, 2) : "•"}
+          </span>
+        ) : projected ? (
+          <span className="mt-0.5 inline-flex h-[22px] w-[22px] shrink-0 items-center justify-center text-faint">
+            <IconRepeat size={16} />
+          </span>
+        ) : (
+          <span className="mt-0.5">
+            <CheckCircle
+              checked={done}
+              onToggle={() => toggleDone(item.id)}
+              label={money ? (money.direction === "in" ? "Marcar como recebido" : "Marcar como pago") : "Concluir"}
+            />
+          </span>
+        )}
+
+        <div className="min-w-0 flex-1">
+          {parent && <p className="mb-0.5 truncate text-[12px] text-muted">Próximo passo de {parent.title}</p>}
+          <p
+            className={clsx(
+              "text-ink",
+              emphasis ? "text-[18px] leading-snug font-semibold tracking-[-0.01em]" : "text-[15px] leading-snug",
+              done && "text-muted line-through decoration-faint",
+            )}
+          >
+            {item.title}
           </p>
+          {meta.length > 0 && (
+            <p className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[13px] text-muted">
+              <AreaDot area={item.area} className="mr-0.5" />
+              {meta.map((m, i) => (
+                <span key={i} className="inline-flex items-center gap-1.5">
+                  {i > 0 && <span className="text-faint">·</span>}
+                  <span className={clsx(m.tone === "danger" && "text-danger", m.tone === "warn" && "text-warn")}>
+                    {m.text}
+                  </span>
+                </span>
+              ))}
+            </p>
+          )}
+        </div>
+
+        {money && money.amountCents > 0 && (
+          <span
+            className={clsx(
+              "mt-0.5 shrink-0 text-[15px] font-medium tabular-nums",
+              done ? "text-muted" : money.direction === "in" ? "text-ok" : "text-ink",
+            )}
+          >
+            {money.direction === "in" ? "+" : ""}
+            {formatBRL(money.amountCents)}
+          </span>
         )}
       </div>
-
-      {money && money.amountCents > 0 && (
-        <span
-          className={clsx(
-            "mt-0.5 shrink-0 text-[15px] font-medium tabular-nums",
-            done ? "text-muted" : money.direction === "in" ? "text-ok" : "text-ink",
-          )}
-        >
-          {money.direction === "in" ? "+" : ""}
-          {formatBRL(money.amountCents)}
-        </span>
-      )}
-    </div>
+    </Swipeable>
   );
 }
