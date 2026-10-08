@@ -5,13 +5,14 @@ import { useParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { addNote, updateProject } from "@/lib/domain/operations";
 import { summarizeProject } from "@/lib/domain/selectors";
-import type { Project, ProjectStatus } from "@/lib/domain/types";
+import { AREA_LABEL, type Area, type Project, type ProjectStatus } from "@/lib/domain/types";
 import { useApp } from "@/lib/hooks/useApp";
 import { useStore } from "@/lib/store/store";
 import { ItemRow } from "@/components/items/ItemRow";
 import { Ready } from "@/components/shell/AppShell";
 import { IconChevronLeft } from "@/components/ui/icons";
 import {
+  Button,
   Collapsible,
   EmptyState,
   Field,
@@ -58,6 +59,7 @@ function ProjectDetail({ project }: { project: Project }) {
   const [state, setState] = useState(project.currentState ?? "");
   const [next, setNext] = useState("");
   const [note, setNote] = useState("");
+  const [editing, setEditing] = useState(false);
 
   const notes = data.notes
     .filter((n) => n.projectId === project.id)
@@ -78,7 +80,13 @@ function ProjectDetail({ project }: { project: Project }) {
       >
         <IconChevronLeft size={18} /> Projetos
       </Link>
-      <PageHeader title={project.name} />
+      <PageHeader title={project.name}>
+        <Button size="sm" variant="ghost" onClick={() => setEditing((e) => !e)}>
+          {editing ? "Fechar" : "Editar"}
+        </Button>
+      </PageHeader>
+
+      {editing && <ProjectEditor project={project} onDone={() => setEditing(false)} />}
 
       <Segmented<ProjectStatus>
         className="mb-6"
@@ -227,5 +235,53 @@ function ProjectDetail({ project }: { project: Project }) {
         </Collapsible>
       )}
     </>
+  );
+}
+
+function ProjectEditor({ project, onDone }: { project: Project; onDone: () => void }) {
+  const apply = useStore((s) => s.apply);
+  const [name, setName] = useState(project.name);
+  const [area, setArea] = useState<Area>(project.area);
+  const [aliases, setAliases] = useState((project.aliases ?? []).join(", "));
+
+  return (
+    <form
+      className="mb-7 animate-fade space-y-3.5 rounded-[22px] bg-surface p-4 shadow-soft"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!name.trim()) return;
+        const list = aliases
+          .split(",")
+          .map((a) => a.trim())
+          .filter(Boolean);
+        apply((d) => updateProject(d, project.id, { name: name.trim(), area, aliases: list }), "Projeto atualizado.");
+        onDone();
+      }}
+    >
+      <Field label="Nome">
+        <input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} />
+      </Field>
+      <Field label="Área">
+        <Segmented<Area>
+          value={area}
+          onChange={setArea}
+          options={(Object.keys(AREA_LABEL) as Area[]).map((a) => ({ value: a, label: AREA_LABEL[a] }))}
+        />
+      </Field>
+      <Field label="Apelidos (separados por vírgula)">
+        <input
+          className={inputClass}
+          value={aliases}
+          onChange={(e) => setAliases(e.target.value)}
+          placeholder="ex.: Beds24, sítio, pousada"
+        />
+      </Field>
+      <p className="px-1 text-[13px] text-muted">
+        Quando um apelido aparece numa captura, ela já chega ligada a este projeto.
+      </p>
+      <Button variant="primary" block disabled={!name.trim()}>
+        Salvar
+      </Button>
+    </form>
   );
 }

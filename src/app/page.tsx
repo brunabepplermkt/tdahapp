@@ -12,8 +12,8 @@ import { useStore } from "@/lib/store/store";
 import { useUI } from "@/lib/store/ui";
 import { ItemRow } from "@/components/items/ItemRow";
 import { Ready } from "@/components/shell/AppShell";
-import { IconArrowRight, IconClock } from "@/components/ui/icons";
-import { Button, Collapsible, EmptyState, Group, PageHeader, Section } from "@/components/ui/primitives";
+import { IconArrowRight, IconClock, IconSearch } from "@/components/ui/icons";
+import { Button, Collapsible, EmptyState, Group, IconButton, PageHeader, Section } from "@/components/ui/primitives";
 
 export default function TodayPage() {
   return (
@@ -35,6 +35,7 @@ function Today() {
   const updateItem = useStore((s) => s.updateItem);
   const someday = useStore((s) => s.someday);
   const openCapture = useUI((s) => s.openCapture);
+  const openSearch = useUI((s) => s.openSearch);
 
   const now = new Date();
   const nextEvent = view.agenda.find((e) => e.startTime && minutesUntil(e.endTime ?? e.startTime, now) > 0);
@@ -52,7 +53,11 @@ function Today() {
 
   return (
     <>
-      <PageHeader eyebrow={longDate(today)} title={`${greeting(now)}.`} />
+      <PageHeader eyebrow={longDate(today)} title={`${greeting(now)}.`}>
+        <IconButton label="Buscar" onClick={openSearch} className="-mr-2 lg:hidden">
+          <IconSearch size={22} />
+        </IconButton>
+      </PageHeader>
       <p className="-mt-5 mb-7 text-[16px] text-ink-2">{summary}</p>
 
       {/* próximo compromisso, se for logo */}

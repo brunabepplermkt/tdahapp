@@ -11,6 +11,7 @@ import { useStore } from "@/lib/store/store";
 import { useUI } from "@/lib/store/ui";
 import { CaptureSheet } from "@/components/capture/CaptureSheet";
 import { ItemSheet } from "@/components/items/ItemSheet";
+import { SearchSheet } from "@/components/search/SearchSheet";
 import {
   IconDecision,
   IconFolder,
@@ -18,6 +19,7 @@ import {
   IconMonth,
   IconMore,
   IconPlus,
+  IconSearch,
   IconToday,
   IconWallet,
   IconWeek,
@@ -70,6 +72,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const hydrate = useStore((s) => s.hydrate);
   const runAgent = useStore((s) => s.runAgent);
   const openCapture = useUI((s) => s.openCapture);
+  const openSearch = useUI((s) => s.openSearch);
   const { data, today, ready } = useApp();
   useTodayTicker();
 
@@ -92,11 +95,14 @@ export function AppShell({ children }: { children: ReactNode }) {
       if (e.key === "n" || e.key === "c") {
         e.preventDefault();
         openCapture();
+      } else if (e.key === "/") {
+        e.preventDefault();
+        openSearch();
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [openCapture]);
+  }, [openCapture, openSearch]);
 
   const badges = {
     inbox: ready ? inboxCaptures(data.captures, today).length : 0,
@@ -117,6 +123,14 @@ export function AppShell({ children }: { children: ReactNode }) {
           <IconPlus size={18} />
           <span className="flex-1 truncate">O que está na cabeça?</span>
           <kbd className="rounded-md border border-line px-1.5 text-[11px] text-faint">N</kbd>
+        </button>
+        <button
+          onClick={openSearch}
+          className="-mt-4 mb-4 flex h-10 items-center gap-3 rounded-xl px-3 text-left text-[14px] text-ink-2 hover:bg-surface-2"
+        >
+          <IconSearch size={18} className="text-muted" />
+          <span className="flex-1">Buscar</span>
+          <kbd className="rounded-md border border-line px-1.5 text-[11px] text-faint">/</kbd>
         </button>
         <WithPath render={(pathname) => <DesktopNav pathname={pathname} badges={badges} />} />
         <div className="mt-auto">
@@ -156,6 +170,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </nav>
 
       <CaptureSheet />
+      <SearchSheet />
       <ItemSheet />
       <Toast />
     </div>
