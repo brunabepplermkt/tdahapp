@@ -7,7 +7,7 @@ test("revisão semanal percorre os 5 passos", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Esvaziar a Inbox");
 
   // passo 1: aceitar uma captura
-  const cards = main(page).locator(".rounded-\\[22px\\]");
+  const cards = main(page).getByTestId("review-card");
   const n = await cards.count();
   await cards.first().getByRole("button", { name: "Aceitar" }).click();
   await expect(cards).toHaveCount(n - 1);

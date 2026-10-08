@@ -71,13 +71,13 @@ function PlanBody({ proposal, today, onClose }: { proposal: PlanProposal; today:
 
       {byDay.map(([day, moves]) => (
         <div key={day} className="mb-4">
-          <p className="mb-1.5 px-1 text-[13px] font-semibold text-muted capitalize">
+          <p className="t-label mb-2 px-1 capitalize">
             {relativeDay(day, today)}{" "}
-            <span className="font-normal text-faint">
+            <span className="font-normal text-muted">
               · {day.slice(8, 10)}/{day.slice(5, 7)}
             </span>
           </p>
-          <div className="overflow-hidden rounded-2xl bg-surface shadow-soft [&>*+*]:border-t [&>*+*]:border-line">
+          <div className="overflow-hidden rounded-[24px] bg-surface shadow-soft ring-1 ring-black/[0.03] [&>*+*]:border-t [&>*+*]:border-line">
             {moves.map((m) => {
               const on = !off.has(m.itemId);
               return (

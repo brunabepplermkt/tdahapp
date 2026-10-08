@@ -46,7 +46,7 @@ function Review() {
         </span>
         <h1 className="text-[26px] font-semibold text-ink">Revisão feita.</h1>
         <p className="mt-2 text-[15px] text-muted">Sua cabeça pode descansar. O que importa está no lugar.</p>
-        <Link href="/" className="mt-8 inline-block text-[15px] font-medium text-accent">
+        <Link href="/" className="mt-8 inline-block text-[15px] font-medium text-accent-text">
           Ir para o Hoje
         </Link>
       </div>
@@ -98,8 +98,8 @@ function InboxStep() {
   return (
     <div className="space-y-3">
       {list.map((c) => (
-        <div key={c.id} className="rounded-[22px] bg-surface p-4 shadow-soft">
-          <p className="mb-2 text-[15px] text-ink">“{c.text}”</p>
+        <div key={c.id} data-testid="review-card" className="rounded-[28px] bg-surface p-5 shadow-soft ring-1 ring-black/[0.03]">
+          <p className="mb-3 font-display text-[20px] leading-[1.25] font-light tracking-[-0.02em] text-ink">“{c.text}”</p>
           <div className="mb-3 space-y-1.5">
             {c.interpretation?.drafts.map((d, i) => (
               <DraftChips key={i} draft={d} today={today} projects={data.projects} />
@@ -179,7 +179,7 @@ function ProjectsStep() {
       {active.map((p) => {
         const s = summarizeProject(data, p, today);
         return (
-          <div key={p.id} className="rounded-[22px] bg-surface p-4 shadow-soft">
+          <div key={p.id} data-testid="review-card" className="rounded-[28px] bg-surface p-5 shadow-soft ring-1 ring-black/[0.03]">
             <p className="text-[16px] font-semibold text-ink">{p.name}</p>
             {p.currentState && <p className="mt-1 text-[14px] text-ink-2">{p.currentState}</p>}
             {s.nextAction ? (

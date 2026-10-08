@@ -48,28 +48,28 @@ export function Sheet({
       role="dialog"
       aria-modal="true"
     >
-      <div className="absolute inset-0 animate-fade bg-black/30 backdrop-blur-[2px]" onClick={onClose} />
+      <div className="absolute inset-0 animate-fade bg-ink/25 backdrop-blur-sm" onClick={onClose} />
       <div
         ref={panel}
         className={clsx(
-          "relative flex max-h-[92dvh] w-full animate-sheet flex-col rounded-t-[28px] bg-bg shadow-soft sm:rounded-[28px]",
+          "relative flex max-h-[92dvh] w-full animate-sheet flex-col rounded-t-[var(--radius-sheet)] bg-bg shadow-float sm:rounded-[var(--radius-sheet)]",
           size === "md" ? "sm:max-w-lg" : "sm:max-w-2xl",
         )}
       >
-        <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-line sm:hidden" />
-        <div className="flex items-center justify-between gap-3 px-5 pt-3 pb-1">
-          <div className="min-w-0 text-[17px] font-semibold text-ink">{title}</div>
+        <div className="mx-auto mt-2.5 h-1 w-10 rounded-full bg-line-strong sm:hidden" />
+        <div className="flex items-center justify-between gap-3 px-6 pt-4 pb-1">
+          <div className="t-heading min-w-0 text-[22px] text-ink">{title}</div>
           <button
             onClick={onClose}
             aria-label="Fechar"
-            className="-mr-2 inline-flex h-10 w-10 items-center justify-center rounded-full text-muted hover:bg-surface-2"
+            className="-mr-2 inline-flex h-11 w-11 items-center justify-center rounded-full bg-surface text-muted ring-1 ring-line hover:bg-surface-2"
           >
             <IconX size={20} />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto overscroll-contain px-5 pt-2 pb-5">{children}</div>
+        <div className="flex-1 overflow-y-auto overscroll-contain px-6 pt-3 pb-6">{children}</div>
         {footer && (
-          <div className="border-t border-line px-5 pt-3 pb-[max(env(safe-area-inset-bottom),16px)]">{footer}</div>
+          <div className="border-t border-line px-6 pt-3 pb-[max(env(safe-area-inset-bottom),16px)]">{footer}</div>
         )}
         {!footer && <div className="pb-[env(safe-area-inset-bottom)]" />}
       </div>

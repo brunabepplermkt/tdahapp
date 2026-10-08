@@ -50,14 +50,14 @@ function Inbox() {
 
       {list.length === 0 ? (
         <EmptyState title="Inbox zerada. Cabeça leve.">
-          <button className="font-medium text-accent" onClick={openCapture}>
+          <button className="font-medium text-accent-text" onClick={openCapture}>
             Capturar algo
           </button>
         </EmptyState>
       ) : (
         <>
-          <div className="mb-6 flex items-center justify-between gap-3">
-            <p className="text-[14px] text-muted">
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <p className="text-[15px] text-muted">
               {list.length === 1 ? "1 coisa" : `${list.length} coisas`}. Aceite, ajuste ou solte.
             </p>
             {confident.length > 1 && (
@@ -75,7 +75,7 @@ function Inbox() {
               </Button>
             )}
           </div>
-          <div className="space-y-3">
+          <div className="divide-y divide-line border-y border-line">
             {list.map((c) => (
               <CaptureCard
                 key={c.id}
@@ -120,35 +120,35 @@ function CaptureCard({
   };
 
   return (
-    <article className="rounded-[22px] bg-surface p-4 shadow-soft">
-      <div className="mb-3 flex items-baseline justify-between gap-3">
-        <p className="text-[16px] leading-snug text-ink">“{capture.text}”</p>
-        <span className="shrink-0 text-[12px] text-faint">{timeAgo(capture.createdAt)}</span>
+    <article className="py-7">
+      <div className="mb-4 flex items-baseline justify-between gap-3">
+        <p className="font-display text-[22px] leading-[1.25] font-light tracking-[-0.02em] text-ink">“{capture.text}”</p>
+        <span className="shrink-0 text-[13px] text-muted">{timeAgo(capture.createdAt)}</span>
       </div>
 
       {!editing ? (
-        <div className="mb-4 space-y-3 border-l-2 border-line pl-3">
+        <div className="mb-5 space-y-3.5 border-l-2 border-line-strong pl-4">
           {drafts.map((d, i) => (
             <div key={i}>
-              <p className="mb-1.5 text-[14px] font-medium text-ink-2">{d.title}</p>
+              <p className="mb-2 text-[16px] text-ink-2">{d.title}</p>
               <DraftChips draft={d} today={today} projects={projects} />
             </div>
           ))}
           {drafts.length === 0 && (
-            <button className="text-[14px] text-accent" onClick={reinterpret}>
+            <button className="text-[15px] text-accent-text" onClick={reinterpret}>
               Interpretar
             </button>
           )}
-          {interp && interp.notes.length > 0 && <p className="text-[12px] text-muted">{interp.notes.join(" · ")}</p>}
-          {unsure && drafts.length > 0 && <p className="text-[12px] text-warn">Não tenho certeza — vale conferir.</p>}
+          {interp && interp.notes.length > 0 && <p className="text-[13px] text-muted">{interp.notes.join(" · ")}</p>}
+          {unsure && drafts.length > 0 && <p className="text-[13px] text-warn">Não tenho certeza — vale conferir.</p>}
         </div>
       ) : (
         <div className="mb-4 space-y-5">
           {drafts.map((d, i) => (
-            <div key={i} className="rounded-2xl bg-bg p-3">
+            <div key={i} className="rounded-[24px] bg-surface p-4 ring-1 ring-black/[0.04]">
               {drafts.length > 1 && (
                 <div className="mb-2 flex items-center justify-between">
-                  <span className="text-[12px] font-semibold text-muted uppercase">Item {i + 1}</span>
+                  <span className="t-label">Item {i + 1}</span>
                   <button
                     className="text-[13px] text-danger"
                     onClick={() => setDrafts((ds) => ds.filter((_, k) => k !== i))}
@@ -165,7 +165,7 @@ function CaptureCard({
             </div>
           ))}
           <button
-            className="text-[14px] font-medium text-accent"
+            className="text-[15px] font-medium text-accent-text"
             onClick={() =>
               setDrafts((ds) => [...ds, { title: "", kind: "task", area: "personal", priority: "normal" }])
             }
@@ -175,7 +175,7 @@ function CaptureCard({
         </div>
       )}
 
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap gap-2">
         <Button
           variant="primary"
           size="sm"

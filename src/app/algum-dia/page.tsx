@@ -48,7 +48,7 @@ function Someday() {
           )}
           {ideas.length > 0 && (
             <>
-              <h2 className="mb-2 px-1 text-[13px] font-semibold tracking-wide text-muted uppercase">Ideias</h2>
+              <h2 className="t-label mb-2 px-1">Ideias</h2>
               <Group>
                 {ideas.map((i) => (
                   <button

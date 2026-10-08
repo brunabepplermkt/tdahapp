@@ -73,6 +73,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const runAgent = useStore((s) => s.runAgent);
   const openCapture = useUI((s) => s.openCapture);
   const openSearch = useUI((s) => s.openSearch);
+  const fabHidden = useUI((s) => s.fabHidden);
   const { data, today, ready } = useApp();
   useTodayTicker();
 
@@ -112,13 +113,13 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-dvh lg:flex">
       {/* lateral — desktop */}
-      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-line px-4 py-6 lg:flex">
-        <Link href="/" className="mb-6 px-3 font-display text-[20px] font-semibold tracking-[-0.02em] text-ink">
+      <aside className="sticky top-0 hidden h-dvh w-72 shrink-0 flex-col px-5 py-8 lg:flex">
+        <Link href="/" className="t-heading mb-8 px-3 text-[28px] text-ink">
           Leve
         </Link>
         <button
           onClick={openCapture}
-          className="mb-6 flex h-11 items-center gap-2 rounded-xl bg-surface px-3 text-left text-[14px] text-muted shadow-soft transition hover:text-ink"
+          className="mb-2 flex h-12 items-center gap-3 rounded-full bg-surface px-4 text-left text-[15px] text-muted shadow-soft ring-1 ring-black/[0.04] transition hover:text-ink"
         >
           <IconPlus size={18} />
           <span className="flex-1 truncate">O que está na cabeça?</span>
@@ -126,7 +127,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </button>
         <button
           onClick={openSearch}
-          className="-mt-4 mb-4 flex h-10 items-center gap-3 rounded-xl px-3 text-left text-[14px] text-ink-2 hover:bg-surface-2"
+          className="mb-8 flex h-11 items-center gap-3 rounded-full px-4 text-left text-[15px] text-ink-2 hover:bg-surface-2"
         >
           <IconSearch size={18} className="text-muted" />
           <span className="flex-1">Buscar</span>
@@ -139,8 +140,8 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Link
                 href="/mais"
                 className={clsx(
-                  "flex h-10 items-center gap-3 rounded-xl px-3 text-[14px] text-ink-2 hover:bg-surface-2",
-                  isActive(pathname, "/mais") && "bg-surface font-medium text-ink shadow-soft",
+                  "flex h-11 items-center gap-3 rounded-full px-4 text-[15px] text-ink-2 hover:bg-surface-2",
+                  isActive(pathname, "/mais") && "bg-surface font-medium text-ink shadow-soft ring-1 ring-black/[0.04]",
                 )}
               >
                 <IconMore size={18} className="text-muted" />
@@ -151,21 +152,29 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      <main className="mx-auto w-full max-w-2xl px-5 pt-[max(env(safe-area-inset-top),12px)] pb-[calc(env(safe-area-inset-bottom)+132px)] lg:px-10 lg:pb-16">
+      <main className="mx-auto w-full max-w-xl px-6 pt-[max(env(safe-area-inset-top),12px)] pb-[calc(env(safe-area-inset-bottom)+168px)] lg:max-w-2xl lg:px-10 lg:pb-24">
         {children}
       </main>
 
-      {/* botão de captura — mobile */}
+      {/* captura — mobile: discreta, sempre ao alcance do polegar */}
       <button
         onClick={openCapture}
         aria-label="Capturar algo"
-        className="fixed right-5 bottom-[calc(env(safe-area-inset-bottom)+80px)] z-30 inline-flex h-14 w-14 items-center justify-center rounded-full bg-accent text-accent-ink shadow-soft transition active:scale-95 lg:hidden"
+        tabIndex={fabHidden ? -1 : 0}
+        aria-hidden={fabHidden}
+        className={clsx(
+          "fixed right-5 bottom-[calc(env(safe-area-inset-bottom)+92px)] z-30 inline-flex h-14 w-14 items-center justify-center rounded-full bg-ink text-bg shadow-float transition active:scale-95 lg:hidden",
+          fabHidden && "pointer-events-none scale-75 opacity-0",
+        )}
       >
-        <IconPlus size={26} strokeWidth={2} />
+        <IconPlus size={26} strokeWidth={1.75} />
       </button>
 
-      {/* navegação inferior — mobile */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-bg/85 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden">
+      {/* navegação inferior — mobile: pílula flutuante, aba ativa em coral */}
+      <nav
+        aria-label="Principal"
+        className="fixed inset-x-0 bottom-0 z-30 px-4 pb-[max(env(safe-area-inset-bottom),12px)] lg:hidden"
+      >
         <WithPath render={(pathname) => <MobileNav pathname={pathname} badges={badges} />} />
       </nav>
 
@@ -179,7 +188,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
 function DesktopNav({ pathname, badges }: { pathname: string; badges: Badges }) {
   return (
-    <nav className="flex flex-col gap-0.5">
+    <nav className="flex flex-col gap-1">
       {DESKTOP_NAV.map((n) => {
         const active = isActive(pathname, n.href);
         const count = n.badge ? badges[n.badge] : 0;
@@ -188,11 +197,11 @@ function DesktopNav({ pathname, badges }: { pathname: string; badges: Badges }) 
             key={n.href}
             href={n.href}
             className={clsx(
-              "flex h-10 items-center gap-3 rounded-xl px-3 text-[14px] transition",
-              active ? "bg-surface font-medium text-ink shadow-soft" : "text-ink-2 hover:bg-surface-2",
+              "flex h-11 items-center gap-3 rounded-full px-4 text-[15px] transition",
+              active ? "bg-surface font-medium text-ink shadow-soft ring-1 ring-black/[0.04]" : "text-ink-2 hover:bg-surface-2",
             )}
           >
-            <n.icon size={18} className={active ? "text-accent" : "text-muted"} />
+            <n.icon size={18} className={active ? "text-accent-text" : "text-muted"} />
             <span className="flex-1">{n.label}</span>
             {count > 0 && <span className="text-[12px] text-muted tabular-nums">{count}</span>}
           </Link>
@@ -204,7 +213,7 @@ function DesktopNav({ pathname, badges }: { pathname: string; badges: Badges }) 
 
 function MobileNav({ pathname, badges }: { pathname: string; badges: Badges }) {
   return (
-    <div className="mx-auto flex max-w-2xl">
+    <div className="mx-auto flex max-w-md gap-1 rounded-full bg-surface/90 p-1.5 shadow-float ring-1 ring-black/[0.05] backdrop-blur-xl">
       {MOBILE_NAV.map((n) => {
         const active = isActive(pathname, n.href);
         const count = n.badge ? badges[n.badge] : 0;
@@ -212,15 +221,21 @@ function MobileNav({ pathname, badges }: { pathname: string; badges: Badges }) {
           <Link
             key={n.href}
             href={n.href}
+            aria-current={active ? "page" : undefined}
             className={clsx(
-              "relative flex h-[60px] flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium transition",
-              active ? "text-ink" : "text-muted",
+              "relative flex h-14 flex-1 flex-col items-center justify-center gap-0.5 rounded-full text-[11px] font-medium transition active:scale-95",
+              active ? "bg-accent text-accent-ink" : "text-muted",
             )}
           >
             <span className="relative">
-              <n.icon size={23} strokeWidth={active ? 2 : 1.6} className={active ? "text-accent" : undefined} />
+              <n.icon size={22} strokeWidth={active ? 1.9 : 1.6} />
               {count > 0 && (
-                <span className="absolute -top-1 -right-2.5 min-w-[17px] rounded-full bg-ink px-1 text-center text-[10px] leading-[17px] text-bg tabular-nums">
+                <span
+                  className={clsx(
+                    "absolute -top-1.5 -right-3 min-w-[17px] rounded-full px-1 text-center text-[10px] leading-[17px] tabular-nums",
+                    active ? "bg-surface text-ink" : "bg-ink text-bg",
+                  )}
+                >
                   {count}
                 </span>
               )}
@@ -238,10 +253,10 @@ export function Ready({ children }: { children: ReactNode }) {
   const { ready } = useApp();
   if (!ready) {
     return (
-      <div className="animate-pulse space-y-4 pt-16" aria-busy="true" aria-label="Carregando">
-        <div className="h-8 w-48 rounded-lg bg-surface-2" />
-        <div className="h-24 rounded-2xl bg-surface-2" />
-        <div className="h-40 rounded-2xl bg-surface-2" />
+      <div className="animate-pulse space-y-5 pt-16" aria-busy="true" aria-label="Carregando">
+        <div className="h-12 w-56 rounded-full bg-surface-2" />
+        <div className="h-28 rounded-[28px] bg-surface-2" />
+        <div className="h-44 rounded-[28px] bg-surface-2" />
       </div>
     );
   }

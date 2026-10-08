@@ -57,7 +57,7 @@ export function Swipeable({
       )}
       <div
         style={{ transform: dx ? `translateX(${dx}px)` : undefined, touchAction: "pan-y" }}
-        className={clsx("relative bg-surface", dx === 0 && "transition-transform duration-200")}
+        className={clsx("relative bg-[var(--row-bg,var(--surface))]", dx === 0 && "transition-transform duration-200")}
         onPointerDown={(e) => {
           if (e.pointerType === "mouse") return;
           start.current = { x: e.clientX, y: e.clientY, id: e.pointerId };

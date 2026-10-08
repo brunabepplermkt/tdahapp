@@ -112,7 +112,7 @@ function ItemDetail({ item, today, onClose }: { item: Item; today: ISODate; onCl
   return (
     <div className="pb-2">
       {parent && (
-        <button onClick={() => openItem(parent.id)} className="mb-2 text-[13px] text-accent">
+        <button onClick={() => openItem(parent.id)} className="mb-2 text-[13px] text-accent-text">
           ← Parte de {parent.title}
         </button>
       )}
@@ -179,7 +179,7 @@ function ItemDetail({ item, today, onClose }: { item: Item; today: ISODate; onCl
       )}
 
       {showSnooze && !done && (
-        <div className="mb-5 animate-fade rounded-2xl bg-surface p-3 shadow-soft">
+        <div className="mb-5 animate-fade rounded-[24px] bg-surface p-4 shadow-soft ring-1 ring-black/[0.03]">
           <p className="mb-2 px-1 text-[13px] text-muted">Sem culpa. Quando você quer ver isso de novo?</p>
           <div className="flex flex-wrap gap-2">
             {snoozeOptions(today).map((o) => (
@@ -210,7 +210,7 @@ function ItemDetail({ item, today, onClose }: { item: Item; today: ISODate; onCl
           {item.postponeCount >= 2 && steps.length === 0 && (
             <p className="mt-3 px-1 text-[13px] text-ink-2">
               Já foi adiado {item.postponeCount} vezes. Talvez esteja grande demais —{" "}
-              <button className="font-medium text-accent" onClick={() => setSuggested(suggestSteps(item.title))}>
+              <button className="font-medium text-accent-text" onClick={() => setSuggested(suggestSteps(item.title))}>
                 quebrar em passos?
               </button>
             </p>
@@ -222,17 +222,17 @@ function ItemDetail({ item, today, onClose }: { item: Item; today: ISODate; onCl
       {item.kind !== "event" && !item.parentId && (
         <div className="mb-6">
           <div className="mb-1.5 flex items-center justify-between px-1">
-            <h3 className="text-[13px] font-semibold tracking-wide text-muted uppercase">Próximos passos</h3>
+            <h3 className="t-label">Próximos passos</h3>
             {!suggested && (
               <button
-                className="inline-flex items-center gap-1 text-[13px] font-medium text-accent"
+                className="inline-flex items-center gap-1 text-[13px] font-medium text-accent-text"
                 onClick={() => setSuggested(suggestSteps(item.title))}
               >
                 <IconSparkle size={14} /> Sugerir
               </button>
             )}
           </div>
-          <div className="overflow-hidden rounded-2xl bg-surface shadow-soft [&>*+*]:border-t [&>*+*]:border-line">
+          <div className="overflow-hidden rounded-[24px] bg-surface shadow-soft ring-1 ring-black/[0.03] [&>*+*]:border-t [&>*+*]:border-line">
             {steps.map((s) => (
               <div key={s.id} className="flex min-h-12 items-center gap-3 px-4 py-2.5">
                 <CheckCircle checked={s.status === "done"} onToggle={() => toggleDone(s.id)} label="Concluir passo" />
@@ -507,7 +507,7 @@ function QuickAction({
       onClick={onClick}
       className={clsx(
         "flex h-[68px] flex-col items-center justify-center gap-1 rounded-2xl text-[13px] font-medium transition active:scale-[0.97]",
-        active ? "bg-accent-soft text-accent" : "bg-surface text-ink-2 shadow-soft hover:text-ink",
+        active ? "bg-accent-soft text-accent-text" : "bg-surface text-ink-2 shadow-soft hover:text-ink",
       )}
     >
       {icon}

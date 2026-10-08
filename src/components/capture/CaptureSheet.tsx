@@ -63,34 +63,34 @@ function CaptureForm({ onDone }: { onDone: () => void }) {
             void submit(e.metaKey || e.ctrlKey);
           }
         }}
-        rows={3}
-        placeholder="pagar cartão, responder fulano, ideia para o Zeloa… do jeito que vier"
-        className="w-full resize-none rounded-2xl bg-surface px-4 py-3.5 text-[17px] leading-relaxed text-ink shadow-soft placeholder:text-faint focus:outline-none"
+        rows={4}
+        placeholder="Pagar cartão, responder fulano, ideia para o Zeloa… do jeito que vier"
+        className="min-h-40 w-full resize-none rounded-[28px] bg-surface px-6 py-5 font-display text-[24px] leading-[1.3] font-light tracking-[-0.02em] text-ink shadow-soft ring-1 ring-black/[0.04] placeholder:text-faint focus:ring-2 focus:ring-accent/30 focus:outline-none focus-ring-own"
         enterKeyHint="done"
         autoCapitalize="sentences"
       />
 
-      <div className="min-h-[76px] px-1 pt-3">
+      <div className="min-h-[92px] px-2 pt-4">
         {preview ? (
           <div className="animate-fade space-y-2">
-            <p className="text-[13px] text-muted">Vou entender assim — você pode mudar depois:</p>
+            <p className="t-label">Vou entender assim — você pode mudar depois</p>
             {preview.drafts.map((d, i) => (
               <div key={i} className="space-y-1.5">
-                {preview.drafts.length > 1 && <p className="text-[14px] font-medium text-ink-2">{d.title}</p>}
+                {preview.drafts.length > 1 && <p className="text-[16px] text-ink">{d.title}</p>}
                 <DraftChips draft={d} today={today} projects={projects} />
               </div>
             ))}
           </div>
         ) : count > 0 ? (
-          <p className="text-[14px] text-ok">
+          <p className="text-[15px] text-ok">
             {count === 1 ? "Guardado." : `${count} coisas guardadas.`} Pode continuar despejando.
           </p>
         ) : (
-          <p className="text-[14px] text-muted">Não precisa escolher data, projeto ou categoria. Só tire da cabeça.</p>
+          <p className="text-[15px] leading-snug text-muted">Não precisa escolher data, projeto ou categoria. Só tire da cabeça.</p>
         )}
       </div>
 
-      <div className="mt-2 flex flex-col gap-2 sm:flex-row-reverse">
+      <div className="mt-3 flex flex-col gap-2.5 sm:flex-row-reverse">
         <Button variant="primary" size="lg" block disabled={!text.trim()} onClick={() => submit(false)}>
           Guardar na Inbox
         </Button>

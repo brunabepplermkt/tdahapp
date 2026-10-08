@@ -45,15 +45,14 @@ function Decisions() {
   return (
     <>
       <PageHeader eyebrow="Só você decide" title="Decisões" />
-      <p className="-mt-4 mb-7 text-[14px] text-muted">
-        Aqui chegam sugestões e coisas que esperam um sim ou não. Nada acontece sem sua aprovação — e o app nunca paga,
-        envia ou publica nada de verdade.
+      <p className="-mt-4 mb-9 max-w-[34ch] text-[16px] leading-snug text-muted">
+        Só o que espera um sim ou um não seu. O app nunca paga, envia ou publica nada de verdade.
       </p>
 
       {list.length === 0 ? (
         <EmptyState title="Nenhuma decisão pendente." />
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {list.map((d) => (
             <DecisionCard key={d.id} decision={d} today={today} />
           ))}
@@ -61,9 +60,9 @@ function Decisions() {
       )}
 
       {resolved.length > 0 && (
-        <div className="mt-8">
+        <div className="mt-10">
           <Collapsible title="Resolvidas recentemente" count={resolved.length}>
-            <ul className="space-y-1.5 px-1 text-[14px] text-muted">
+            <ul className="space-y-2 px-1 text-[15px] text-muted">
               {resolved.map((d) => (
                 <li key={d.id}>
                   {d.status === "approved" ? "✓" : "—"} {d.title}
@@ -86,23 +85,23 @@ function DecisionCard({ decision, today }: { decision: Decision; today: string }
   const effects = describeActions(data, decision);
 
   return (
-    <article className="rounded-[22px] bg-surface p-4 shadow-soft">
-      <div className="mb-2 flex items-center gap-2">
+    <article className="rounded-[28px] bg-surface p-6 shadow-soft ring-1 ring-black/[0.03]">
+      <div className="mb-3 flex items-center gap-2">
         <Pill tone={kind.tone}>{kind.label}</Pill>
         {decision.createdBy === "agent" && (
-          <span className="text-[12px] text-faint">
+          <span className="text-[13px] text-muted">
             {decision.actions[0]?.origin === "agent" ? "sugerido por um agente" : "sugerido pelo assistente local"}
           </span>
         )}
       </div>
-      <h3 className="text-[17px] leading-snug font-semibold text-ink">{decision.title}</h3>
-      {decision.context && <p className="mt-1 text-[14px] text-ink-2">{decision.context}</p>}
+      <h3 className="t-heading text-[22px] leading-[1.25] text-ink">{decision.title}</h3>
+      {decision.context && <p className="mt-2 text-[15px] leading-snug text-ink-2">{decision.context}</p>}
       {effects.length > 0 && (
-        <p className="mt-2 text-[13px] text-muted">
+        <p className="mt-3 text-[14px] text-muted">
           Ao aprovar: {effects.join("; ").replace(/^./, (c) => c.toLowerCase())}.
         </p>
       )}
-      <div className="mt-4 flex flex-wrap gap-1.5">
+      <div className="mt-5 flex flex-wrap gap-2">
         <Button variant="primary" size="sm" onClick={() => approve(decision)}>
           {decision.kind === "pay" ? "Já paguei" : "Aprovar"}
         </Button>
@@ -113,15 +112,16 @@ function DecisionCard({ decision, today }: { decision: Decision; today: string }
         ) : decision.projectId ? (
           <Link
             href={`/projetos/${decision.projectId}`}
-            className="inline-flex h-9 items-center rounded-full bg-surface-2 px-3.5 text-[13px] font-medium"
+            className="inline-flex h-10 items-center rounded-full bg-surface px-4 text-[14px] font-medium ring-1 ring-line-strong/70"
           >
             Ver projeto
           </Link>
         ) : null}
+      </div>
+      <div className="-mb-2 mt-1 -ml-3 flex">
         <Button
           size="sm"
           variant="ghost"
-          className="ml-auto px-2.5"
           onClick={() => apply((d) => resolveDecision(d, decision.id, "snoozed", addDays(today, 1)), "Volta amanhã.")}
         >
           Adiar

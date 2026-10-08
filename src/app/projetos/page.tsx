@@ -40,7 +40,7 @@ function Projects() {
 
       {adding && (
         <form
-          className="mb-6 animate-fade space-y-3 rounded-[22px] bg-surface p-4 shadow-soft"
+          className="mb-8 animate-fade space-y-3.5 rounded-[28px] bg-surface p-5 shadow-soft ring-1 ring-black/[0.03]"
           onSubmit={(e) => {
             e.preventDefault();
             if (!name.trim()) return;
@@ -67,16 +67,16 @@ function Projects() {
         </form>
       )}
 
-      <Group className="mb-8">
+      <Group flat className="mb-10">
         {active.map((p) => (
           <ProjectRow key={p.id} project={p} />
         ))}
-        {active.length === 0 && <p className="px-4 py-5 text-[14px] text-muted">Nenhum projeto ativo.</p>}
+        {active.length === 0 && <p className="px-1 py-6 text-[15px] text-muted">Nenhum projeto ativo.</p>}
       </Group>
 
       {others.length > 0 && (
         <Collapsible title="Pausados e concluídos" count={others.length}>
-          <Group>
+          <Group flat>
             {others.map((p) => (
               <ProjectRow key={p.id} project={p} />
             ))}
@@ -91,21 +91,21 @@ function ProjectRow({ project }: { project: Project }) {
   const { data, today } = useApp();
   const s = summarizeProject(data, project, today);
   return (
-    <Link href={`/projetos/${project.id}`} className="flex items-center gap-3 px-4 py-4 transition hover:bg-surface-2">
+    <Link href={`/projetos/${project.id}`} className="flex items-center gap-3 px-1 py-6 transition hover:bg-surface-2/50">
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <AreaDot area={project.area} />
-          <p className={clsx("text-[16px] font-semibold", project.status !== "active" ? "text-muted" : "text-ink")}>
+          <p className={clsx("font-display text-[24px] leading-tight font-light tracking-[-0.02em]", project.status !== "active" ? "text-muted" : "text-ink")}>
             {project.name}
           </p>
-          {project.status === "paused" && <span className="text-[12px] text-muted">pausado</span>}
+          {project.status === "paused" && <span className="text-[13px] text-muted">pausado</span>}
           {project.deadline && project.status === "active" && (
-            <span className="ml-auto text-[12px] text-muted">prazo {relativeDay(project.deadline, today)}</span>
+            <span className="ml-auto text-[13px] text-muted">prazo {relativeDay(project.deadline, today)}</span>
           )}
         </div>
-        {project.currentState && <p className="mt-1 line-clamp-2 text-[14px] text-ink-2">{project.currentState}</p>}
+        {project.currentState && <p className="mt-1.5 line-clamp-2 text-[15px] leading-snug text-ink-2">{project.currentState}</p>}
         {project.status === "active" && (
-          <p className="mt-1.5 text-[13px] text-muted">
+          <p className="mt-2 text-[14px] text-muted">
             {s.nextAction ? (
               <>
                 Próximo: <span className="text-ink-2">{s.nextAction.title}</span>

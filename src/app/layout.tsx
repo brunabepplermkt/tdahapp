@@ -1,7 +1,11 @@
 import type { Metadata, Viewport } from "next";
+import { Outfit } from "next/font/google";
 import { AppShell } from "@/components/shell/AppShell";
 import { ServiceWorker } from "@/components/shell/ServiceWorker";
 import "./globals.css";
+
+/** Outfit (SIL OFL): títulos e números com a leveza editorial; o corpo segue a fonte do sistema (SF Pro no iPhone). */
+const outfit = Outfit({ subsets: ["latin", "latin-ext"], weight: ["300", "400", "500"], variable: "--font-outfit", display: "swap" });
 
 export const metadata: Metadata = {
   title: { default: "Leve", template: "%s · Leve" },
@@ -16,14 +20,14 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f7f6f3" },
+    { media: "(prefers-color-scheme: light)", color: "#f4f3f1" },
     { media: "(prefers-color-scheme: dark)", color: "#121211" },
   ],
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="pt-BR" className="h-full">
+    <html lang="pt-BR" className={`h-full ${outfit.variable}`}>
       <body className="min-h-full">
         <AppShell>{children}</AppShell>
         <ServiceWorker />

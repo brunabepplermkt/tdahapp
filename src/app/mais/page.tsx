@@ -171,7 +171,7 @@ function More() {
           <div className="space-y-4">
             {(["read", "write"] as const).map((kind) => (
               <div key={kind}>
-                <p className="mb-1.5 px-1 text-[12px] font-semibold tracking-wide text-muted uppercase">
+                <p className="t-label mb-2 px-1">
                   {kind === "read" ? "Leitura (READ)" : "Escrita (WRITE)"}
                 </p>
                 <Group>
@@ -196,7 +196,7 @@ function More() {
         </Collapsible>
       </Section>
 
-      <p className="mt-10 text-center text-[12px] text-faint">Leve · MVP local · dados fictícios de exemplo</p>
+      <p className="mt-10 text-center text-[13px] text-muted">Leve · MVP local · dados fictícios de exemplo</p>
     </>
   );
 }

@@ -60,7 +60,7 @@ function Finance() {
 
   return (
     <>
-      <PageHeader eyebrow="Financeiro" title={monthLabel(anchor)}>
+      <PageHeader eyebrow={`Financeiro · ${monthLabel(anchor).split(" ").pop()}`} title={monthLabel(anchor).split(" ")[0]}>
         <div className="flex">
           <IconButton label="Mês anterior" onClick={() => setOffset((o) => o - 1)}>
             <IconChevronLeft />
@@ -73,7 +73,7 @@ function Finance() {
 
       <Section>
         <MoneyGrid summary={view.money} />
-        <p className="mt-2 px-1 text-[12px] text-faint">
+        <p className="mt-2 px-1 text-[13px] text-muted">
           Registro manual. Nenhum banco conectado; o app não movimenta dinheiro.
         </p>
       </Section>
@@ -94,7 +94,7 @@ function Finance() {
 
       {byCategory.length > 0 && (
         <Section title="Saídas por categoria">
-          <div className="space-y-2.5 rounded-[22px] bg-surface p-4 shadow-soft">
+          <div className="space-y-2.5 rounded-[28px] bg-surface p-5 shadow-soft ring-1 ring-black/[0.03]">
             {byCategory.map(([cat, v]) => (
               <div key={cat}>
                 <div className="mb-1 flex justify-between text-[13px]">
@@ -115,7 +115,7 @@ function Finance() {
 
       {settled.length > 0 && (
         <Collapsible title="Pagos e recebidos" count={settled.length}>
-          <Group>
+          <Group flat>
             {settled.map((i) => (
               <ItemRow key={i.id} item={i} today={today} />
             ))}
@@ -130,7 +130,7 @@ function List({ title, items, today }: { title: string; items: Item[]; today: st
   const sorted = [...items].sort((a, b) => (placementDate(a) ?? "").localeCompare(placementDate(b) ?? ""));
   return (
     <Section title={title}>
-      <Group>
+      <Group flat>
         {sorted.map((i) => (
           <ItemRow key={i.id} item={i} today={today} />
         ))}
@@ -154,7 +154,7 @@ function AddEntry({ onDone, defaultDate }: { onDone: () => void; defaultDate: st
 
   return (
     <form
-      className="animate-fade space-y-3.5 rounded-[22px] bg-surface p-4 shadow-soft"
+      className="animate-fade space-y-3.5 rounded-[28px] bg-surface p-5 shadow-soft ring-1 ring-black/[0.03]"
       onSubmit={(e) => {
         e.preventDefault();
         if (!title.trim() || !cents) return;

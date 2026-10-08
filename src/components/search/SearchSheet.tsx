@@ -32,7 +32,7 @@ function SearchBody({ onClose }: { onClose: () => void }) {
 
   return (
     <div>
-      <label className="mb-5 flex items-center gap-3 rounded-2xl bg-surface px-4 shadow-soft">
+      <label className="mb-6 flex items-center gap-3 rounded-full bg-surface pr-5 pl-5 shadow-soft ring-1 ring-black/[0.04] focus-within:ring-2 focus-within:ring-accent/30">
         <IconSearch size={18} className="text-muted" />
         <input
           autoFocus
@@ -40,13 +40,13 @@ function SearchBody({ onClose }: { onClose: () => void }) {
           onChange={(e) => setQ(e.target.value)}
           placeholder="Tarefa, nota, pessoa, projeto…"
           aria-label="Buscar"
-          className="h-12 flex-1 bg-transparent text-[17px] placeholder:text-faint focus:outline-none"
+          className="h-14 flex-1 bg-transparent text-[17px] placeholder:text-faint focus:outline-none focus-ring-own"
           enterKeyHint="search"
         />
       </label>
 
       {deferred.trim().length > 1 && r.total === 0 && (
-        <p className="px-1 text-[14px] text-muted">Nada encontrado. Tente outra palavra.</p>
+        <p className="px-1 text-[15px] text-muted">Nada encontrado. Tente outra palavra.</p>
       )}
 
       {r.items.length > 0 && (
@@ -54,7 +54,7 @@ function SearchBody({ onClose }: { onClose: () => void }) {
           {r.items.map((i) => (
             <button
               key={i.id}
-              className="block w-full px-4 py-3 text-left hover:bg-surface-2"
+              className="block w-full px-5 py-3.5 text-left hover:bg-surface-2"
               onClick={() => {
                 onClose();
                 openItem(i.id);
@@ -76,7 +76,7 @@ function SearchBody({ onClose }: { onClose: () => void }) {
               key={p.id}
               href={`/projetos/${p.id}`}
               onClick={onClose}
-              className="block px-4 py-3 hover:bg-surface-2"
+              className="block px-5 py-3.5 hover:bg-surface-2"
             >
               <p className="text-[15px] text-ink">{p.name}</p>
               {p.currentState && <p className="mt-0.5 line-clamp-1 text-[12px] text-muted">{p.currentState}</p>}
@@ -92,7 +92,7 @@ function SearchBody({ onClose }: { onClose: () => void }) {
               key={n.id}
               href={n.projectId ? `/projetos/${n.projectId}` : "/projetos"}
               onClick={onClose}
-              className="block px-4 py-3 hover:bg-surface-2"
+              className="block px-5 py-3.5 hover:bg-surface-2"
             >
               <p className="line-clamp-2 text-[14px] text-ink-2">{n.body}</p>
               {projectName(n.projectId) && <p className="mt-0.5 text-[12px] text-muted">{projectName(n.projectId)}</p>}
@@ -108,7 +108,7 @@ function SearchBody({ onClose }: { onClose: () => void }) {
               key={c.id}
               href="/inbox"
               onClick={onClose}
-              className="block px-4 py-3 text-[14px] text-ink-2 hover:bg-surface-2"
+              className="block px-5 py-3.5 text-[14px] text-ink-2 hover:bg-surface-2"
             >
               “{c.text}”
             </Link>
@@ -122,7 +122,7 @@ function SearchBody({ onClose }: { onClose: () => void }) {
 function ResultGroup({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="mb-5">
-      <h3 className="mb-1.5 px-1 text-[12px] font-semibold tracking-wide text-muted uppercase">{title}</h3>
+      <h3 className="t-label mb-2 px-1">{title}</h3>
       <Group>{children}</Group>
     </section>
   );

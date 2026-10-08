@@ -71,15 +71,15 @@ function Focus() {
   };
 
   return (
-    <div className="fixed inset-0 z-[35] flex flex-col bg-bg px-6 pt-[max(env(safe-area-inset-top),20px)] pb-[max(env(safe-area-inset-bottom),24px)]">
+    <div className="aura fixed inset-0 z-[35] flex flex-col bg-bg px-6 pt-[max(env(safe-area-inset-top),20px)] pb-[max(env(safe-area-inset-bottom),24px)]">
       <div className="mx-auto flex w-full max-w-xl items-center justify-between">
-        <span className="text-[13px] font-medium text-muted">
+        <span className="t-label">
           Modo foco{remaining > 1 ? ` · mais ${remaining - 1} depois` : ""}
         </span>
         <Link
           href="/"
           aria-label="Sair do modo foco"
-          className="-mr-2 inline-flex h-11 w-11 items-center justify-center rounded-full text-muted hover:bg-surface-2"
+          className="-mr-2 inline-flex h-12 w-12 items-center justify-center rounded-full bg-surface/80 text-ink-2 ring-1 ring-black/[0.05] hover:bg-surface"
         >
           <IconX size={22} />
         </Link>
@@ -88,20 +88,20 @@ function Focus() {
       <div className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center">
         {celebrate ? (
           <div className="animate-fade text-center">
-            <span className="mx-auto mb-5 inline-flex h-16 w-16 animate-pop items-center justify-center rounded-full bg-ok text-white">
+            <span className="mx-auto mb-6 inline-flex h-20 w-20 animate-pop items-center justify-center rounded-full bg-ok text-white">
               <IconCheck size={32} strokeWidth={2.5} />
             </span>
-            <p className="text-[22px] font-semibold text-ink">Feito.</p>
+            <p className="t-title text-ink">Feito.</p>
           </div>
         ) : current ? (
           <div className="animate-fade">
-            {current.parent && <p className="mb-2 text-[15px] text-muted">Próximo passo de {current.parent.title}</p>}
-            <h1 className="font-display text-[34px] leading-[1.12] font-semibold tracking-[-0.025em] text-ink">
+            {current.parent && <p className="mb-3 text-[16px] text-ink-2">Próximo passo de {current.parent.title}</p>}
+            <h1 className="t-display text-balance text-ink">
               {current.item.title}
             </h1>
-            {current.reasons[0] && <p className="mt-3 text-[15px] text-muted">{current.reasons[0]}</p>}
+            {current.reasons[0] && <p className="mt-5 text-[17px] text-ink-2">{current.reasons[0]}</p>}
             {current.item.notes && (
-              <p className="mt-5 rounded-2xl bg-surface px-4 py-3 text-[15px] whitespace-pre-line text-ink-2 shadow-soft">
+              <p className="mt-6 rounded-[24px] bg-surface/80 px-5 py-4 text-[16px] leading-snug whitespace-pre-line text-ink-2 ring-1 ring-black/[0.04]">
                 {current.item.notes}
               </p>
             )}
@@ -109,7 +109,7 @@ function Focus() {
             <div className="mt-10">
               {left === null ? (
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="mr-1 text-[14px] text-muted">Timer:</span>
+                  <span className="mr-1 text-[15px] text-ink-2">Timer</span>
                   {TIMERS.map((m) => (
                     <Button key={m} size="sm" onClick={() => startTimer(m)}>
                       {m} min
@@ -120,7 +120,7 @@ function Focus() {
                 <div className="flex items-baseline gap-4">
                   <span
                     className={clsx(
-                      "font-display text-[44px] font-semibold tabular-nums",
+                      "font-display text-[56px] leading-none font-light tracking-[-0.03em] tabular-nums",
                       timeUp ? "text-ok" : "text-ink",
                     )}
                     aria-live="polite"
@@ -129,19 +129,19 @@ function Focus() {
                       ? "Tempo!"
                       : `${String(Math.floor(left / 60)).padStart(2, "0")}:${String(left % 60).padStart(2, "0")}`}
                   </span>
-                  <button className="text-[14px] text-muted hover:text-ink" onClick={() => setEndAt(null)}>
+                  <button className="h-11 px-2 text-[15px] text-ink-2 hover:text-ink" onClick={() => setEndAt(null)}>
                     {timeUp ? "Fechar" : "Parar"}
                   </button>
                 </div>
               )}
-              {timeUp && <p className="mt-2 text-[15px] text-ink-2">Pausa curta. Terminou ou quer mais uma rodada?</p>}
+              {timeUp && <p className="mt-3 text-[16px] text-ink-2">Pausa curta. Terminou ou quer mais uma rodada?</p>}
             </div>
           </div>
         ) : (
           <div className="text-center">
-            <p className="text-[22px] font-semibold text-ink">Nada mais para hoje.</p>
-            <p className="mt-2 text-[15px] text-muted">Isso também é um bom resultado.</p>
-            <Link href="/" className="mt-6 inline-block text-[15px] font-medium text-accent">
+            <p className="t-title text-ink">Nada mais para hoje.</p>
+            <p className="mt-3 text-[17px] text-ink-2">Isso também é um bom resultado.</p>
+            <Link href="/" className="mt-8 inline-flex h-12 items-center rounded-full bg-ink px-6 text-[15px] font-medium text-bg">
               Voltar ao Hoje
             </Link>
           </div>
@@ -149,8 +149,8 @@ function Focus() {
       </div>
 
       {current && !celebrate && (
-        <div className="mx-auto grid w-full max-w-xl grid-cols-[1fr_auto_auto] gap-2">
-          <Button variant="primary" size="lg" onClick={done}>
+        <div className="mx-auto grid w-full max-w-xl grid-cols-[1fr_auto_auto] gap-2.5">
+          <Button variant="dark" size="lg" onClick={done}>
             <IconCheck size={20} /> Feito
           </Button>
           <Button

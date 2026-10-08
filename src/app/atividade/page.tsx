@@ -22,17 +22,17 @@ function Activity() {
   return (
     <>
       <PageHeader eyebrow="Histórico de ações" title="Atividade" />
-      <p className="-mt-4 mb-6 text-[14px] text-muted">
+      <p className="-mt-4 mb-8 max-w-[36ch] text-[16px] leading-snug text-muted">
         Tudo que foi feito por você ou sugerido pelo assistente local. Útil para auditar um agente no futuro.
       </p>
       {data.activity.length === 0 ? (
         <EmptyState title="Nada ainda." />
       ) : (
-        <Group>
+        <Group flat>
           {data.activity.slice(0, 80).map((a) => (
-            <div key={a.id} className="px-4 py-3">
-              <p className="text-[14px] text-ink">{a.summary}</p>
-              <p className="mt-0.5 text-[12px] text-muted">
+            <div key={a.id} className="px-1 py-4">
+              <p className="text-[16px] leading-snug text-ink">{a.summary}</p>
+              <p className="mt-1 text-[13px] leading-snug text-muted">
                 {ACTOR[a.actor]}
                 {STATUS[a.status] && (
                   <span className={clsx(a.status === "error" && "text-danger")}> · {STATUS[a.status]}</span>

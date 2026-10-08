@@ -1,53 +1,71 @@
 @import "tailwindcss";
 
 /*
- * Design tokens.
- * Paleta quase neutra; cor só com significado:
- *   accent  → ação principal / foco
- *   danger  → prazo vencido
- *   warn    → dinheiro saindo / atenção
- *   ok      → dinheiro entrando / feito
- *   área    → pontos discretos (trabalho, pessoal, financeiro)
+ * Design tokens — “Leve”: calmo, editorial, quase branco.
+ *
+ * Cor só com significado:
+ *   accent   → a ação/foco do momento (botão principal, aba ativa, destaque do título)
+ *   danger   → prazo vencido (sempre acompanhado de palavra, nunca só cor)
+ *   warn     → dinheiro saindo / vence logo
+ *   ok       → feito / dinheiro entrando
+ *   área     → pontinhos discretos (trabalho, pessoal, financeiro)
+ * Contrastes: texto ≥ 4.5:1 sobre --bg e --surface (accent-text, muted, danger, warn, ok checados).
  */
 :root {
-  --bg: #f7f6f3;
+  --bg: #f4f3f1;
   --surface: #ffffff;
-  --surface-2: #f1f0ec;
-  --ink: #1b1a17;
-  --ink-2: #4a4843;
-  --muted: #7a7872;
-  --faint: #b3b0a8;
-  --line: #e8e6e1;
-  --accent: #2b4acb;
+  --surface-2: #f1f0ed;
+  --ink: #151413;
+  --ink-2: #4a4845;
+  --muted: #6c6965;
+  --faint: #98958f; /* só decorativo/placeholder: nunca para texto que precise ser lido */
+  --line: #e9e7e3;
+  --line-strong: #d9d6d0;
+
+  --accent: #c24a56; /* preenchimentos (texto branco: 4.7:1) */
   --accent-ink: #ffffff;
-  --accent-soft: #e9edfb;
-  --danger: #b8432f;
-  --danger-soft: #f8e9e5;
-  --warn: #a8650b;
-  --warn-soft: #f7efe1;
-  --ok: #2f7a4f;
-  --ok-soft: #e6f1ea;
-  --area-work: #5466c7;
-  --area-personal: #5b8f6e;
-  --area-finance: #b07a1f;
-  --shadow: 0 1px 2px rgb(20 18 12 / 0.04), 0 8px 24px rgb(20 18 12 / 0.06);
+  --accent-text: #b0404c; /* texto/ícone coral sobre claro */
+  --accent-soft: #fbeaeb;
+  --aura-1: #f6c4c0; /* “momentos visuais”: manchas suaves, só no hero e no foco */
+  --aura-2: #d8d0f2;
+  --aura-3: #f8dcc8;
+
+  --danger: #98302a;
+  --danger-soft: #f8e7e4;
+  --warn: #8f5708;
+  --warn-soft: #f7eddc;
+  --ok: #2a704a;
+  --ok-soft: #e4f0e8;
+  --area-work: #7c86c6;
+  --area-personal: #6ea383;
+  --area-finance: #c39443;
+
+  --radius-card: 28px;
+  --radius-sheet: 32px;
+  --elev-1: 0 1px 0 rgb(20 18 12 / 0.03), 0 14px 36px -14px rgb(20 18 12 / 0.1);
+  --elev-2: 0 1px 0 rgb(20 18 12 / 0.04), 0 18px 40px -12px rgb(20 18 12 / 0.18);
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #121211;
-    --surface: #1b1b19;
-    --surface-2: #232320;
-    --ink: #f1efe9;
-    --ink-2: #c9c6be;
-    --muted: #9a978f;
+    --bg: #111110;
+    --surface: #1a1a18;
+    --surface-2: #232321;
+    --ink: #f3f1ec;
+    --ink-2: #cbc8c1;
+    --muted: #a09d96;
     --faint: #5f5d58;
-    --line: #2b2a27;
-    --accent: #8ea2ff;
-    --accent-ink: #0f1430;
-    --accent-soft: #1f2540;
-    --danger: #ef8f7c;
+    --line: #2a2927;
+    --line-strong: #3a3936;
+    --accent: #e0707a;
+    --accent-ink: #1c0f10;
+    --accent-text: #f09098;
+    --accent-soft: #3a2224;
+    --aura-1: #5a2f33;
+    --aura-2: #2f2a4a;
+    --aura-3: #4a3426;
+    --danger: #f09a8a;
     --danger-soft: #3a211b;
     --warn: #e2b161;
     --warn-soft: #33281a;
@@ -56,7 +74,8 @@
     --area-work: #8e9cf0;
     --area-personal: #8cc4a0;
     --area-finance: #d9a856;
-    --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(0 0 0 / 0.35);
+    --elev-1: 0 1px 0 rgb(255 255 255 / 0.02), 0 14px 36px -14px rgb(0 0 0 / 0.6);
+    --elev-2: 0 1px 0 rgb(255 255 255 / 0.03), 0 18px 40px -12px rgb(0 0 0 / 0.7);
     color-scheme: dark;
   }
 }
@@ -70,8 +89,10 @@
   --color-muted: var(--muted);
   --color-faint: var(--faint);
   --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
   --color-accent: var(--accent);
   --color-accent-ink: var(--accent-ink);
+  --color-accent-text: var(--accent-text);
   --color-accent-soft: var(--accent-soft);
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
@@ -83,8 +104,9 @@
   --color-area-personal: var(--area-personal);
   --color-area-finance: var(--area-finance);
   --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", system-ui, sans-serif;
-  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", system-ui, sans-serif;
-  --shadow-soft: var(--shadow);
+  --font-display: var(--font-outfit), -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+  --shadow-soft: var(--elev-1);
+  --shadow-float: var(--elev-2);
 }
 
 html {
@@ -106,19 +128,67 @@ body {
   background: var(--accent-soft);
 }
 
+/*
+ * Escala tipográfica. Hierarquia por tamanho, peso LEVE e espaço — não por negrito.
+ * display: o momento editorial (saudação, título de tela, o “Agora”)
+ */
+.t-display {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(2.5rem, 11.5vw, 3.5rem);
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+}
+.t-title {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: 2rem;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+.t-heading {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 1.375rem;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+.t-label {
+  font-size: 0.8125rem;
+  line-height: 1.2;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--muted);
+}
+
+/* mancha de cor suave: o único “momento visual” (hero do Agora, modo foco) */
+.aura {
+  background-color: var(--surface);
+  background-image:
+    radial-gradient(90% 70% at 100% 0%, color-mix(in srgb, var(--aura-1) 70%, transparent) 0%, transparent 62%),
+    radial-gradient(80% 70% at 0% 100%, color-mix(in srgb, var(--aura-2) 55%, transparent) 0%, transparent 65%),
+    radial-gradient(60% 50% at 60% 55%, color-mix(in srgb, var(--aura-3) 45%, transparent) 0%, transparent 70%);
+}
+
 /* foco visível só para teclado */
 :focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-  border-radius: 8px;
+  outline: 2px solid var(--accent-text);
+  outline-offset: 3px;
+  border-radius: 12px;
+}
+/* campos que já têm anel de foco próprio não ganham contorno duplo */
+.focus-ring-own:focus-visible {
+  outline: none;
 }
 
 /* inputs nativos coerentes com o tema */
-input,
-textarea,
-select {
-  font: inherit;
-  color: inherit;
+@layer base {
+  input,
+  textarea,
+  select {
+    font: inherit;
+    color: inherit;
+  }
 }
 
 input[type="date"],

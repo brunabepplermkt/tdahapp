@@ -36,11 +36,11 @@ export function CheckCircle({
       <span
         className={clsx(
           "inline-flex items-center justify-center rounded-full border-[1.5px] transition",
-          size === "md" ? "h-[22px] w-[22px]" : "h-7 w-7",
-          checked ? "animate-pop border-ok bg-ok text-white" : "border-faint hover:border-ink-2",
+          size === "md" ? "h-6 w-6" : "h-9 w-9",
+          checked ? "animate-pop border-ok bg-ok text-white" : "border-faint hover:border-accent",
         )}
       >
-        {checked && <IconCheck size={size === "md" ? 14 : 18} strokeWidth={2.5} />}
+        {checked && <IconCheck size={size === "md" ? 15 : 22} strokeWidth={2.5} />}
       </span>
     </button>
   );
@@ -132,21 +132,23 @@ export function ItemRow({
           }
         }}
         className={clsx(
-          "flex min-h-14 cursor-pointer items-start gap-3.5 px-4 py-3.5 text-left transition hover:bg-surface-2/60 active:bg-surface-2",
+          "flex cursor-pointer items-start gap-4 px-[var(--row-px,1.25rem)] text-left transition hover:bg-surface-2/50 active:bg-surface-2/80",
+          emphasis ? "min-h-20 py-6" : "min-h-16 py-4",
           projected && "cursor-default opacity-60",
         )}
       >
         {item.kind === "event" ? (
-          <span className="mt-0.5 w-[22px] shrink-0 text-center text-[11px] leading-[22px] font-semibold text-muted tabular-nums">
+          <span className="mt-0.5 w-6 shrink-0 text-center text-[12px] leading-6 font-medium text-muted tabular-nums">
             {item.startTime ? item.startTime.slice(0, 2) : "•"}
           </span>
         ) : projected ? (
-          <span className="mt-0.5 inline-flex h-[22px] w-[22px] shrink-0 items-center justify-center text-faint">
+          <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center text-faint">
             <IconRepeat size={16} />
           </span>
         ) : (
-          <span className="mt-0.5">
+          <span className={emphasis ? "mt-1.5" : "mt-0.5"}>
             <CheckCircle
+              size={emphasis ? "lg" : "md"}
               checked={done}
               onToggle={() => toggleDone(item.id)}
               label={money ? (money.direction === "in" ? "Marcar como recebido" : "Marcar como pago") : "Concluir"}
@@ -155,19 +157,19 @@ export function ItemRow({
         )}
 
         <div className="min-w-0 flex-1">
-          {parent && <p className="mb-0.5 truncate text-[12px] text-muted">Próximo passo de {parent.title}</p>}
+          {parent && <p className="mb-1 truncate text-[13px] text-muted">Próximo passo de {parent.title}</p>}
           <p
             className={clsx(
               "text-ink",
-              emphasis ? "text-[18px] leading-snug font-semibold tracking-[-0.01em]" : "text-[15px] leading-snug",
+              emphasis ? "font-display text-[28px] leading-[1.15] font-normal tracking-[-0.025em]" : "text-[16px] leading-snug",
               done && "text-muted line-through decoration-faint",
             )}
           >
             {item.title}
           </p>
           {meta.length > 0 && (
-            <p className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[13px] text-muted">
-              <AreaDot area={item.area} className="mr-0.5" />
+            <p className={clsx("flex flex-wrap items-center gap-x-1.5 text-muted", emphasis ? "mt-2.5 text-[15px]" : "mt-1 text-[13.5px]")}>
+              {!emphasis && <AreaDot area={item.area} className="mr-0.5" />}
               {meta.map((m, i) => (
                 <span key={i} className="inline-flex items-center gap-1.5">
                   {i > 0 && <span className="text-faint">·</span>}
@@ -183,7 +185,7 @@ export function ItemRow({
         {money && money.amountCents > 0 && (
           <span
             className={clsx(
-              "mt-0.5 shrink-0 text-[15px] font-medium tabular-nums",
+              "mt-0.5 shrink-0 font-display text-[17px] tabular-nums",
               done ? "text-muted" : money.direction === "in" ? "text-ok" : "text-ink",
             )}
           >

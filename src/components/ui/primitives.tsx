@@ -6,7 +6,7 @@ import { forwardRef, useState, type ButtonHTMLAttributes, type ReactNode } from 
 import type { Area } from "@/lib/domain/types";
 import { IconChevronDown } from "./icons";
 
-type Variant = "primary" | "secondary" | "ghost" | "danger";
+type Variant = "primary" | "secondary" | "ghost" | "danger" | "dark";
 
 export const Button = forwardRef<
   HTMLButtonElement,
@@ -16,12 +16,13 @@ export const Button = forwardRef<
     <button
       ref={ref}
       className={clsx(
-        "inline-flex items-center justify-center gap-2 rounded-full font-medium transition active:scale-[0.98] disabled:opacity-40 disabled:active:scale-100",
-        size === "sm" && "h-9 px-3.5 text-[13px]",
-        size === "md" && "h-11 px-4.5 text-[15px]",
-        size === "lg" && "h-13 px-6 text-[16px]",
-        variant === "primary" && "bg-accent text-accent-ink hover:opacity-90",
-        variant === "secondary" && "bg-surface-2 text-ink hover:bg-line",
+        "inline-flex items-center justify-center gap-2 rounded-full font-medium whitespace-nowrap transition active:scale-[0.98] disabled:opacity-40 disabled:active:scale-100",
+        size === "sm" && "h-11 px-4 text-[14px]",
+        size === "md" && "h-12 px-5 text-[15px]",
+        size === "lg" && "h-14 px-7 text-[16px]",
+        variant === "primary" && "bg-accent text-accent-ink hover:brightness-105",
+        variant === "dark" && "bg-ink text-bg hover:opacity-90",
+        variant === "secondary" && "bg-surface text-ink ring-1 ring-line-strong/70 hover:bg-surface-2",
         variant === "ghost" && "text-ink-2 hover:bg-surface-2",
         variant === "danger" && "text-danger hover:bg-danger-soft",
         block && "w-full",
@@ -63,10 +64,10 @@ export function PageHeader({
   children?: ReactNode;
 }) {
   return (
-    <header className="mb-7 pt-4 lg:pt-10">
-      {eyebrow && <p className="mb-1 text-[13px] font-medium text-muted">{eyebrow}</p>}
+    <header className="mb-8 pt-5 lg:pt-12">
+      {eyebrow && <p className="t-label mb-3">{eyebrow}</p>}
       <div className="flex items-end justify-between gap-3">
-        <h1 className="font-display text-[32px] leading-[1.1] font-semibold tracking-[-0.025em] text-ink">{title}</h1>
+        <h1 className="t-display text-ink">{title}</h1>
         {children}
       </div>
     </header>
@@ -87,25 +88,31 @@ export function Section({
   className?: string;
 }) {
   return (
-    <section className={clsx("mb-8", className)}>
+    <section className={clsx("mb-10", className)}>
       {(title || action) && (
-        <div className="mb-2 flex items-baseline justify-between gap-3 px-1">
-          <h2 className="text-[13px] font-semibold tracking-wide text-muted uppercase">{title}</h2>
+        <div className="mb-3 flex items-baseline justify-between gap-3 px-1">
+          <h2 className="t-heading text-[19px] text-ink">{title}</h2>
           {action}
         </div>
       )}
-      {hint && <p className="mb-2 px-1 text-[13px] text-muted">{hint}</p>}
+      {hint && <p className="mb-3 px-1 text-[14px] leading-snug text-muted">{hint}</p>}
       {children}
     </section>
   );
 }
 
-/** Grupo “inset” estilo iOS: superfície com linhas separadoras finas. */
-export function Group({ children, className }: { children: ReactNode; className?: string }) {
+/**
+ * Superfície branca arredondada (cards e grupos). Por padrão tem linhas separadoras finas.
+ * `flat`: sem caixa — só linhas finas sobre o fundo. Use para listas secundárias,
+ * para a tela não virar um mural de cartões.
+ */
+export function Group({ children, className, flat }: { children: ReactNode; className?: string; flat?: boolean }) {
   return (
     <div
       className={clsx(
-        "overflow-hidden rounded-2xl bg-surface shadow-soft [&>*+*]:border-t [&>*+*]:border-line",
+        flat
+          ? "border-y border-line [--row-bg:var(--bg)] [--row-px:0.25rem] [&>*+*]:border-t [&>*+*]:border-line"
+          : "overflow-hidden rounded-[24px] bg-surface shadow-soft ring-1 ring-black/[0.03] [&>*+*]:border-t [&>*+*]:border-line",
         className,
       )}
     >
@@ -129,13 +136,13 @@ export function Collapsible({
   return (
     <section className="mb-6">
       <button
-        className="flex min-h-11 w-full items-center gap-2 px-1 text-left text-[14px] text-muted hover:text-ink"
+        className="flex min-h-12 w-full items-center gap-2 px-1 text-left text-[15px] text-muted hover:text-ink"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
       >
         <IconChevronDown size={16} className={clsx("transition", !open && "-rotate-90")} />
         <span className="font-medium">{title}</span>
-        {count !== undefined && <span className="tabular-nums text-faint">{count}</span>}
+        {count !== undefined && <span className="tabular-nums text-muted">{count}</span>}
       </button>
       {open && <div className="mt-1 animate-fade">{children}</div>}
     </section>
@@ -144,9 +151,9 @@ export function Collapsible({
 
 export function EmptyState({ title, children }: { title: string; children?: ReactNode }) {
   return (
-    <div className="rounded-2xl border border-dashed border-line px-5 py-7 text-center">
-      <p className="text-[15px] font-medium text-ink-2">{title}</p>
-      {children && <div className="mt-1 text-[14px] text-muted">{children}</div>}
+    <div className="rounded-[24px] bg-surface/70 px-6 py-9 text-center ring-1 ring-black/[0.03]">
+      <p className="t-heading text-[20px] text-ink-2">{title}</p>
+      {children && <div className="mx-auto mt-2 max-w-[28ch] text-[15px] leading-snug text-muted">{children}</div>}
     </div>
   );
 }
@@ -178,12 +185,12 @@ export function Pill({
   return (
     <span
       className={clsx(
-        "inline-flex h-6 items-center gap-1 rounded-full px-2 text-[12px] font-medium whitespace-nowrap",
+        "inline-flex h-7 items-center gap-1 rounded-full px-2.5 text-[12px] font-medium whitespace-nowrap",
         tone === "neutral" && "bg-surface-2 text-ink-2",
         tone === "danger" && "bg-danger-soft text-danger",
         tone === "warn" && "bg-warn-soft text-warn",
         tone === "ok" && "bg-ok-soft text-ok",
-        tone === "accent" && "bg-accent-soft text-accent",
+        tone === "accent" && "bg-accent-soft text-accent-text",
         className,
       )}
     >
@@ -206,10 +213,10 @@ export function LinkRow({
   return (
     <Link
       href={href}
-      className="flex min-h-13 items-center gap-3 px-4 py-3 transition hover:bg-surface-2 active:bg-surface-2"
+      className="flex min-h-14 items-center gap-3.5 px-5 py-3 transition hover:bg-surface-2 active:bg-surface-2"
     >
       {icon && <span className="text-muted">{icon}</span>}
-      <span className="flex-1 text-[15px] text-ink">{children}</span>
+      <span className="flex-1 text-[16px] text-ink">{children}</span>
       {trailing}
     </Link>
   );
@@ -227,7 +234,7 @@ export function Segmented<T extends string>({
   className?: string;
 }) {
   return (
-    <div role="radiogroup" className={clsx("flex rounded-full bg-surface-2 p-1", className)}>
+    <div role="radiogroup" className={clsx("flex rounded-full bg-surface-2 p-1 ring-1 ring-line", className)}>
       {options.map((o) => (
         <button
           key={o.value}
@@ -235,8 +242,8 @@ export function Segmented<T extends string>({
           aria-checked={value === o.value}
           onClick={() => onChange(o.value)}
           className={clsx(
-            "h-9 flex-1 rounded-full px-3 text-[13px] font-medium transition",
-            value === o.value ? "bg-surface text-ink shadow-soft" : "text-muted hover:text-ink",
+            "h-10 flex-1 rounded-full px-3 text-[14px] font-medium transition",
+            value === o.value ? "bg-surface text-ink shadow-soft ring-1 ring-black/[0.04]" : "text-muted hover:text-ink",
           )}
         >
           {o.label}
@@ -249,11 +256,11 @@ export function Segmented<T extends string>({
 export function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block px-1 text-[13px] font-medium text-muted">{label}</span>
+      <span className="t-label mb-1.5 block px-1">{label}</span>
       {children}
     </label>
   );
 }
 
 export const inputClass =
-  "w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-[16px] text-ink placeholder:text-faint focus:border-accent focus:outline-none";
+  "w-full rounded-2xl border border-line-strong/70 bg-surface px-4 py-3 text-[16px] text-ink placeholder:text-faint focus:border-accent focus:ring-2 focus:ring-accent/20 focus:outline-none focus-ring-own";

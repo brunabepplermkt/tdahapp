@@ -41,7 +41,7 @@ function ProjectLoader() {
     return (
       <div className="pt-16">
         <EmptyState title="Projeto não encontrado.">
-          <Link href="/projetos" className="text-accent">
+          <Link href="/projetos" className="text-accent-text">
             Ver projetos
           </Link>
         </EmptyState>
@@ -111,7 +111,7 @@ function ProjectDetail({ project }: { project: Project }) {
 
       <Section title="Próxima ação">
         {s.nextAction ? (
-          <div className="overflow-hidden rounded-[22px] bg-surface shadow-soft">
+          <div className="overflow-hidden rounded-[28px] bg-surface shadow-soft ring-1 ring-black/[0.03]">
             <ItemRow item={s.nextAction} parent={nextParent} today={today} showProject={false} emphasis />
           </div>
         ) : (
@@ -135,13 +135,13 @@ function ProjectDetail({ project }: { project: Project }) {
 
       <Section title="Pendências">
         {pending.length ? (
-          <Group>
+          <Group flat>
             {pending.map((i) => (
               <ItemRow key={i.id} item={i} today={today} showProject={false} />
             ))}
           </Group>
         ) : (
-          <p className="px-1 text-[14px] text-faint">Nada além da próxima ação.</p>
+          <p className="px-1 text-[14px] text-muted">Nada além da próxima ação.</p>
         )}
         {s.nextAction && (
           <form
@@ -194,9 +194,9 @@ function ProjectDetail({ project }: { project: Project }) {
         {notes.length > 0 && (
           <ul className="space-y-2">
             {notes.map((n) => (
-              <li key={n.id} className="rounded-2xl bg-surface px-4 py-3 text-[14px] text-ink-2 shadow-soft">
+              <li key={n.id} className="rounded-[24px] bg-surface px-5 py-4 text-[15px] text-ink-2 shadow-soft ring-1 ring-black/[0.03]">
                 {n.body}
-                <span className="mt-1 block text-[12px] text-faint">
+                <span className="mt-1 block text-[13px] text-muted">
                   {new Date(n.createdAt).toLocaleDateString("pt-BR", { day: "numeric", month: "short" })}
                 </span>
               </li>
@@ -207,7 +207,7 @@ function ProjectDetail({ project }: { project: Project }) {
 
       {related.length > 0 && (
         <Collapsible title="Agenda, metas e dinheiro" count={related.length}>
-          <Group>
+          <Group flat>
             {related.map((i) => (
               <ItemRow key={i.id} item={i} today={today} showProject={false} />
             ))}
@@ -217,7 +217,7 @@ function ProjectDetail({ project }: { project: Project }) {
 
       {ideas.length > 0 && (
         <Collapsible title="Ideias" count={ideas.length}>
-          <Group>
+          <Group flat>
             {ideas.map((i) => (
               <ItemRow key={i.id} item={i} today={today} showProject={false} />
             ))}
@@ -227,7 +227,7 @@ function ProjectDetail({ project }: { project: Project }) {
 
       {s.done.length > 0 && (
         <Collapsible title="Feitos" count={s.done.length}>
-          <Group>
+          <Group flat>
             {s.done.slice(0, 15).map((i) => (
               <ItemRow key={i.id} item={i} today={today} showProject={false} />
             ))}
@@ -246,7 +246,7 @@ function ProjectEditor({ project, onDone }: { project: Project; onDone: () => vo
 
   return (
     <form
-      className="mb-7 animate-fade space-y-3.5 rounded-[22px] bg-surface p-4 shadow-soft"
+      className="mb-7 animate-fade space-y-3.5 rounded-[28px] bg-surface p-5 shadow-soft ring-1 ring-black/[0.03]"
       onSubmit={(e) => {
         e.preventDefault();
         if (!name.trim()) return;

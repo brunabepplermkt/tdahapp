@@ -10,7 +10,11 @@ export async function open(page: Page, path = "/") {
 }
 
 export async function capture(page: Page, text: string, mode: "inbox" | "organize" = "inbox") {
-  await page.getByRole("button", { name: "Capturar algo" }).click();
+  // no Hoje o convite “Joga aqui…” faz o papel do botão +, que reaparece ao rolar
+  await page
+    .getByRole("button", { name: /Capturar algo|Joga aqui/ })
+    .first()
+    .click();
   await page.getByPlaceholder(/do jeito que vier/).fill(text);
   await page.getByRole("button", { name: mode === "inbox" ? "Guardar na Inbox" : "Já organizar" }).click();
   await page.keyboard.press("Escape");

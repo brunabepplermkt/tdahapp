@@ -54,7 +54,10 @@ function Month() {
 
   return (
     <>
-      <PageHeader eyebrow={offset === 0 ? "Este mês" : undefined} title={monthLabel(anchor)}>
+      <PageHeader
+        eyebrow={`${offset === 0 ? "Este mês · " : ""}${monthLabel(anchor).split(" ").pop()}`}
+        title={monthLabel(anchor).split(" ")[0]}
+      >
         <div className="flex">
           <IconButton
             label="Mês anterior"
@@ -78,7 +81,7 @@ function Month() {
       </PageHeader>
 
       {!past && (
-        <div className="mb-6">
+        <div className="mb-8">
           <Button variant="primary" onClick={() => setProposal(proposeMonthPlan(data, anchor, today))}>
             <IconSparkle size={18} /> Organizar meu mês
           </Button>
@@ -86,8 +89,8 @@ function Month() {
       )}
 
       {/* calendário */}
-      <div className="mb-3 rounded-[22px] bg-surface p-3 shadow-soft">
-        <div className="mb-1 grid grid-cols-7 text-center text-[11px] font-medium text-faint">
+      <div className="mb-4 rounded-[32px] bg-surface p-4 shadow-soft ring-1 ring-black/[0.03]">
+        <div className="mb-1 grid grid-cols-7 text-center text-[12px] font-medium text-muted">
           {WEEKDAYS.map((w, i) => (
             <span key={i} className="py-1">
               {w}
@@ -109,10 +112,10 @@ function Month() {
                   aria-label={fmt(d, "d 'de' MMMM")}
                   aria-pressed={isSel}
                   className={clsx(
-                    "flex h-12 flex-col items-center justify-center gap-1 rounded-xl text-[15px] tabular-nums transition",
+                    "mx-auto flex h-12 w-12 flex-col items-center justify-center gap-1 rounded-full font-display text-[17px] font-light tabular-nums transition",
                     !inMonth && "invisible",
                     isSel ? "bg-ink text-bg" : "hover:bg-surface-2",
-                    !isSel && isToday && "font-semibold text-accent",
+                    !isSel && isToday && "bg-accent-soft font-normal text-accent-text",
                     !isSel && d < today && "text-muted",
                   )}
                 >
@@ -130,7 +133,7 @@ function Month() {
           </div>
         ))}
       </div>
-      <p className="mb-8 flex flex-wrap gap-x-4 gap-y-1 px-1 text-[12px] text-muted">
+      <p className="mb-10 flex flex-wrap gap-x-4 gap-y-1 px-2 text-[13px] text-muted">
         <Legend className="bg-ink-2">compromisso</Legend>
         <Legend className="bg-warn">prazo</Legend>
         <Legend className="bg-area-finance">conta</Legend>
@@ -140,13 +143,13 @@ function Month() {
       {day && (
         <Section title={relativeDay(day, today) === "hoje" ? "Hoje" : fmt(day, "EEEE, d 'de' MMMM")}>
           {dayItems.length ? (
-            <Group>
+            <Group flat>
               {dayItems.map((i) => (
                 <ItemRow key={i.id} item={i} today={today} showDate={false} />
               ))}
             </Group>
           ) : (
-            <p className="px-1 text-[14px] text-faint">Nada marcado.</p>
+            <p className="px-1 text-[15px] text-muted">Nada marcado.</p>
           )}
         </Section>
       )}
@@ -165,11 +168,11 @@ function Month() {
 
       {view.goals.length > 0 && (
         <Section title="Metas">
-          <Group>
+          <Group flat>
             {view.goals.map((g) => (
-              <div key={g.id} className="flex items-center gap-3 px-4 py-3.5">
+              <div key={g.id} className="flex items-center gap-4 px-1 py-4">
                 <CheckCircle checked={g.status === "done"} onToggle={() => toggleDone(g.id)} label="Meta atingida" />
-                <span className={clsx("flex-1 text-[15px]", g.status === "done" && "text-muted line-through")}>
+                <span className={clsx("flex-1 text-[16px]", g.status === "done" && "text-muted line-through")}>
                   {g.title}
                 </span>
               </div>
@@ -181,7 +184,7 @@ function Month() {
       {offset === 0 && (
         <Section title="Chegando" hint="O que é importante nos próximos 30 dias.">
           {view.upcoming.length ? (
-            <Group>
+            <Group flat>
               {view.upcoming.map((i) => (
                 <ItemRow key={i.id} item={i} today={today} />
               ))}
@@ -194,7 +197,7 @@ function Month() {
 
       {view.deadlines.filter(isOpen).length > 0 && (
         <Section title="Prazos do mês">
-          <Group>
+          <Group flat>
             {view.deadlines.map((i) => (
               <ItemRow key={i.id} item={i} today={today} />
             ))}
@@ -204,15 +207,15 @@ function Month() {
 
       {view.projects.length > 0 && (
         <Section title="Projetos com prazo">
-          <Group>
+          <Group flat>
             {view.projects.map((p) => (
               <Link
                 key={p.id}
                 href={`/projetos/${p.id}`}
-                className="flex items-center justify-between px-4 py-3.5 hover:bg-surface-2"
+                className="flex items-center justify-between px-1 py-4 hover:bg-surface-2/50"
               >
-                <span className="text-[15px] text-ink">{p.name}</span>
-                <span className={clsx("text-[13px]", diffDays(p.deadline!, today) <= 7 ? "text-warn" : "text-muted")}>
+                <span className="text-[16px] text-ink">{p.name}</span>
+                <span className={clsx("text-[14px]", diffDays(p.deadline!, today) <= 7 ? "text-warn" : "text-muted")}>
                   {relativeDay(p.deadline!, today)}
                 </span>
               </Link>
@@ -222,7 +225,7 @@ function Month() {
       )}
 
       {view.unscheduledCount > 0 && (
-        <p className="px-1 text-[13px] text-muted">
+        <p className="px-1 text-[14px] text-muted">
           {view.unscheduledCount} {view.unscheduledCount === 1 ? "item está" : "itens estão"} sem data — tudo bem. O
           Organizar pode sugerir semanas.
         </p>

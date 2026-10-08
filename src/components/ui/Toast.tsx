@@ -20,9 +20,9 @@ export function Toast() {
       key={toast.id}
       role="status"
       aria-live="polite"
-      className="pointer-events-none fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+92px)] z-40 flex justify-center px-4 lg:bottom-8"
+      className="pointer-events-none fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+104px)] z-40 flex justify-center px-4 lg:bottom-8"
     >
-      <div className="pointer-events-auto flex animate-sheet items-center gap-4 rounded-full bg-ink py-2 pr-2 pl-5 text-[14px] text-bg shadow-soft">
+      <div className="pointer-events-auto flex animate-sheet items-center gap-4 rounded-full bg-ink py-2 pr-2 pl-5 text-[14px] text-bg shadow-float">
         <span>{toast.message}</span>
         {toast.undo ? (
           <button onClick={undo} className="h-9 rounded-full px-3.5 font-semibold text-bg/90 hover:bg-white/10">
