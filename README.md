@@ -14,6 +14,7 @@ npm run dev        # http://localhost:3000
 
 Na primeira abertura o app cria dados de demonstração (relativos à data de hoje).
 Em **Mais → Seus dados** dá para recriar a demo, exportar um backup JSON ou começar do zero.
+Antes de qualquer ação que apaga ou substitui dados, o app guarda um backup automático (restaurável ali mesmo).
 
 | Comando | O quê |
 | --- | --- |
@@ -21,7 +22,8 @@ Em **Mais → Seus dados** dá para recriar a demo, exportar um backup JSON ou c
 | `npm run build && npm start` | build de produção (PWA + service worker ativos) |
 | `npm run lint` | ESLint |
 | `npm run typecheck` | TypeScript |
-| `npm test` | testes (Vitest) — parser, seletores, planejador, ferramentas |
+| `npm test` | testes unitários (Vitest) — parser, seletores, planejador, ferramentas, migração |
+| `npm run e2e` | testes ponta a ponta (Playwright, iPhone + desktop) — rode `npm run build` antes |
 
 No iPhone: abra no Safari → Compartilhar → **Adicionar à Tela de Início**.
 

@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { pendingDecisions } from "@/lib/domain/selectors";
 import { useApp } from "@/lib/hooks/useApp";
 import { listInterpreters, toolManifest } from "@/lib/intelligence";
-import { repository } from "@/lib/store/repository";
+import { repository, type BackupInfo } from "@/lib/store/repository";
 import { useStore } from "@/lib/store/store";
 import { Ready } from "@/components/shell/AppShell";
 import { IconActivity, IconDecision, IconFolder, IconLeaf, IconWallet } from "@/components/ui/icons";
@@ -32,7 +32,19 @@ function More() {
   const { data, today } = useApp();
   const resetDemo = useStore((s) => s.resetDemo);
   const clearAll = useStore((s) => s.clearAll);
+  const restoreBackup = useStore((s) => s.restoreBackup);
   const [confirmClear, setConfirmClear] = useState(false);
+  const [backups, setBackups] = useState<BackupInfo[]>([]);
+  const [backupsVersion, setBackupsVersion] = useState(0);
+  const refreshBackups = () => setBackupsVersion((v) => v + 1);
+
+  useEffect(() => {
+    let alive = true;
+    void repository.listBackups().then((b) => alive && setBackups(b));
+    return () => {
+      alive = false;
+    };
+  }, [backupsVersion]);
   const decisions = pendingDecisions(data.decisions, today, data.items).length;
   const someday = data.items.filter((i) => i.status === "someday").length;
   const tools = toolManifest();
@@ -80,7 +92,7 @@ function More() {
           <Button size="sm" onClick={exportJson}>
             Exportar backup (JSON)
           </Button>
-          <Button size="sm" onClick={resetDemo}>
+          <Button size="sm" onClick={() => void resetDemo().then(refreshBackups)}>
             Recriar dados de exemplo
           </Button>
           {!confirmClear ? (
@@ -92,7 +104,7 @@ function More() {
               size="sm"
               variant="danger"
               onClick={() => {
-                clearAll();
+                void clearAll().then(refreshBackups);
                 setConfirmClear(false);
               }}
             >
@@ -100,6 +112,36 @@ function More() {
             </Button>
           )}
         </div>
+        {backups.length > 0 && (
+          <div className="mt-4">
+            <Collapsible title="Backups automáticos" count={backups.length}>
+              <p className="mb-2 px-1 text-[13px] text-muted">
+                Guardados antes de qualquer ação que apaga ou substitui dados. Ficam os 5 mais recentes.
+              </p>
+              <Group>
+                {backups.map((b) => (
+                  <div key={b.key} className="flex items-center gap-3 px-4 py-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[14px] text-ink">
+                        {new Date(b.at).toLocaleString("pt-BR", {
+                          day: "2-digit",
+                          month: "short",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                        {b.items !== null && <span className="text-muted"> · {b.items} itens</span>}
+                      </p>
+                      <p className="text-[12px] text-muted">{b.reason}</p>
+                    </div>
+                    <Button size="sm" onClick={() => void restoreBackup(b.key).then(refreshBackups)}>
+                      Restaurar
+                    </Button>
+                  </div>
+                ))}
+              </Group>
+            </Collapsible>
+          </div>
+        )}
       </Section>
 
       <Section title="Integrações" hint="Nada externo está conectado. Cada uma exigirá sua autorização explícita.">

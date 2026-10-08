@@ -45,18 +45,24 @@ interface StoreState {
   approveDecision(decision: Decision): void;
   applyPlan(moves: PlanMove[]): void;
   runAgent(today: ISODate): void;
-  resetDemo(): void;
-  clearAll(): void;
+  resetDemo(): Promise<void>;
+  clearAll(): Promise<void>;
+  restoreBackup(key: string): Promise<boolean>;
 }
 
 let toastSeq = 0;
-let saveTimer: ReturnType<typeof setTimeout> | null = null;
+/** grava o estado atual e guarda uma cópia de segurança */
+async function snapshot(reason: string, data: AppData) {
+  await repository.save(data);
+  await repository.backup(reason);
+}
 
+/**
+ * Salva imediatamente. Sem debounce de propósito: no iPhone o app pode ser
+ * fechado a qualquer momento, e a última ação não pode se perder.
+ */
 function persist(data: AppData) {
-  if (saveTimer) clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => {
-    void repository.save(data);
-  }, 150);
+  void repository.save(data);
 }
 
 export const useStore = create<StoreState>((set, get) => ({
@@ -216,11 +222,24 @@ export const useStore = create<StoreState>((set, get) => ({
     get().apply((d) => runAgentRules(d, today), undefined, false);
   },
 
-  resetDemo() {
-    get().apply(() => buildDemoData(todayISO()), "Dados de demonstração recriados.");
+  async resetDemo() {
+    await snapshot("antes de recriar a demonstração", get().data);
+    get().apply(() => buildDemoData(todayISO()), "Dados de demonstração recriados. Backup guardado.", false);
   },
 
-  clearAll() {
-    get().apply(() => emptyData(), "Tudo limpo. Começando do zero.");
+  async clearAll() {
+    await snapshot("antes de começar do zero", get().data);
+    get().apply(() => emptyData(), "Tudo limpo. Backup guardado em Mais.", false);
+  },
+
+  async restoreBackup(key) {
+    const data = await repository.restoreBackup(key);
+    if (!data) {
+      get().showToast("Não consegui ler esse backup.");
+      return false;
+    }
+    set({ data });
+    get().showToast("Backup restaurado.");
+    return true;
   },
 }));

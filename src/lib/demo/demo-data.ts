@@ -9,7 +9,9 @@ import type { AppData, Capture, ISODate, Item, Note, Project } from "@/lib/domai
 import { interpretText } from "@/lib/intelligence/heuristic/parse";
 import { runAgentRules } from "@/lib/intelligence/rules";
 
-export const DATA_VERSION = 1;
+import { CURRENT_VERSION } from "@/lib/store/migrate";
+
+export const DATA_VERSION = CURRENT_VERSION;
 
 export function emptyData(): AppData {
   return { version: DATA_VERSION, items: [], captures: [], projects: [], notes: [], decisions: [], activity: [] };
