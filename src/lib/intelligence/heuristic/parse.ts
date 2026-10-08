@@ -24,18 +24,52 @@ import type { CaptureInterpreter, InterpretContext } from "../types";
  * ------------------------------------------------------------------------- */
 
 export function normalize(s: string): string {
-  return s
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase();
+  return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 }
 
 const ACTION_VERBS = [
-  "ver", "pagar", "ligar", "responder", "marcar", "agendar", "comprar", "enviar", "mandar",
-  "fazer", "terminar", "olhar", "resolver", "checar", "revisar", "falar", "pedir", "buscar",
-  "levar", "cancelar", "renovar", "atualizar", "organizar", "preparar", "escrever", "criar",
-  "estudar", "ler", "lembrar", "conferir", "cobrar", "receber", "configurar", "testar",
-  "corrigir", "arrumar", "limpar", "trocar", "devolver", "separar", "postar", "publicar",
+  "ver",
+  "pagar",
+  "ligar",
+  "responder",
+  "marcar",
+  "agendar",
+  "comprar",
+  "enviar",
+  "mandar",
+  "fazer",
+  "terminar",
+  "olhar",
+  "resolver",
+  "checar",
+  "revisar",
+  "falar",
+  "pedir",
+  "buscar",
+  "levar",
+  "cancelar",
+  "renovar",
+  "atualizar",
+  "organizar",
+  "preparar",
+  "escrever",
+  "criar",
+  "estudar",
+  "ler",
+  "lembrar",
+  "conferir",
+  "cobrar",
+  "receber",
+  "configurar",
+  "testar",
+  "corrigir",
+  "arrumar",
+  "limpar",
+  "trocar",
+  "devolver",
+  "separar",
+  "postar",
+  "publicar",
 ];
 
 const VERB_RE = ACTION_VERBS.join("|");
@@ -44,7 +78,9 @@ const VERB_RE = ACTION_VERBS.join("|");
 export function splitClauses(text: string): string[] {
   const parts = text
     .split(/\n|;|\s+\+\s+/)
-    .flatMap((p) => p.split(new RegExp(`\\s*(?:,\\s*|\\s+)(?:e|tamb[eé]m|e tamb[eé]m|depois)\\s+(?=(?:${VERB_RE})\\b)`, "i")))
+    .flatMap((p) =>
+      p.split(new RegExp(`\\s*(?:,\\s*|\\s+)(?:e|tamb[eé]m|e tamb[eé]m|depois)\\s+(?=(?:${VERB_RE})\\b)`, "i")),
+    )
     .flatMap((p) => p.split(new RegExp(`,\\s+(?=(?:${VERB_RE})\\b)`, "i")))
     .map((p) => p.trim())
     .filter((p) => p.length > 1);
@@ -138,7 +174,10 @@ interface Extract<T> {
 const DEADLINE_PREFIX = String.raw`(?:at[eé]\s+(?:o\s+|a\s+)?|vence\s+(?:na\s+|no\s+|em\s+)?|vencimento\s+|prazo\s+(?:at[eé]\s+)?)`;
 
 export function extractDate(text: string, today: ISODate): Extract<DateHit | null> {
-  const patterns: { re: RegExp; resolve: (m: RegExpMatchArray) => { date: ISODate; label: string; deadline?: boolean } | null }[] = [
+  const patterns: {
+    re: RegExp;
+    resolve: (m: RegExpMatchArray) => { date: ISODate; label: string; deadline?: boolean } | null;
+  }[] = [
     {
       re: new RegExp(String.raw`\b(${DEADLINE_PREFIX})?depois\s+de\s+amanh[aã]\b`, "i"),
       resolve: () => ({ date: addDays(today, 2), label: "depois de amanhã" }),
@@ -159,7 +198,10 @@ export function extractDate(text: string, today: ISODate): Extract<DateHit | nul
       resolve: () => ({ date: monthEnd(today), label: "até o fim do mês", deadline: true }),
     },
     {
-      re: new RegExp(String.raw`\b(${DEADLINE_PREFIX})?(?:(?:na\s+)?semana\s+que\s+vem|(?:na\s+)?pr[oó]xima\s+semana)\b`, "i"),
+      re: new RegExp(
+        String.raw`\b(${DEADLINE_PREFIX})?(?:(?:na\s+)?semana\s+que\s+vem|(?:na\s+)?pr[oó]xima\s+semana)\b`,
+        "i",
+      ),
       resolve: () => ({ date: addDays(weekStart(today), 7), label: "semana que vem" }),
     },
     {
@@ -266,13 +308,54 @@ const EVENT_WORDS =
   /\b(reuni[aã]o|consulta|dentista|m[eé]dic[oa]|call|almo[cç]o\s+com|jantar\s+com|caf[eé]\s+com|entrevista|anivers[aá]rio|festa|exame|aula|voo|viagem|evento|encontro)\b/i;
 
 const PERSON_STOP = new Set([
-  "o", "a", "os", "as", "e", "de", "do", "da", "pra", "para", "que", "email", "e-mail", "mensagem",
-  "msg", "whatsapp", "zap", "proposta", "cliente", "hoje", "amanha", "amanhã", "sobre", "ele", "ela",
+  "o",
+  "a",
+  "os",
+  "as",
+  "e",
+  "de",
+  "do",
+  "da",
+  "pra",
+  "para",
+  "que",
+  "email",
+  "e-mail",
+  "mensagem",
+  "msg",
+  "whatsapp",
+  "zap",
+  "proposta",
+  "cliente",
+  "hoje",
+  "amanha",
+  "amanhã",
+  "sobre",
+  "ele",
+  "ela",
 ]);
 
 const NOT_PEOPLE = new Set([
-  "segunda", "terca", "quarta", "quinta", "sexta", "sabado", "domingo", "janeiro", "fevereiro", "marco",
-  "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro", "deus",
+  "segunda",
+  "terca",
+  "quarta",
+  "quinta",
+  "sexta",
+  "sabado",
+  "domingo",
+  "janeiro",
+  "fevereiro",
+  "marco",
+  "abril",
+  "maio",
+  "junho",
+  "julho",
+  "agosto",
+  "setembro",
+  "outubro",
+  "novembro",
+  "dezembro",
+  "deus",
 ]);
 
 export function extractPeople(text: string, projects: Project[] = []): string[] {
@@ -281,7 +364,9 @@ export function extractPeople(text: string, projects: Project[] = []): string[] 
     projects.flatMap((p) => [p.name, ...(p.aliases ?? [])]).flatMap((n) => normalize(n).split(/\s+/)),
   );
   // nomes próprios depois de preposições: “pro Rafael”, “com a Ana”
-  for (const m of text.matchAll(/\b(?:pro|pra|para|com|ao|à|a|o|do|da)\s+(?:o\s+|a\s+)?([A-ZÀ-Ý][a-zà-ÿ]{2,})\b(?![\wà-ÿ])/g)) {
+  for (const m of text.matchAll(
+    /\b(?:pro|pra|para|com|ao|à|a|o|do|da)\s+(?:o\s+|a\s+)?([A-ZÀ-Ý][a-zà-ÿ]{2,})\b(?![\wà-ÿ])/g,
+  )) {
     const n = normalize(m[1]);
     if (NOT_PEOPLE.has(n) || projectWords.has(n) || PERSON_STOP.has(n)) continue;
     people.add(m[1]);
@@ -318,14 +403,18 @@ interface Classification {
   direction?: "in" | "out";
 }
 
-export function classify(text: string, opts: { hasTime: boolean; hasDate: boolean; wasReminder: boolean }): Classification {
+export function classify(
+  text: string,
+  opts: { hasTime: boolean; hasDate: boolean; wasReminder: boolean },
+): Classification {
   const t = normalize(text);
   const has = (re: RegExp) => re.test(t);
 
   if (/^(ideia|idea)\b|\bideia\s+(?:para|pra|de)\b/.test(t)) {
     return { kind: "idea", intent: "idea", area: WORK_WORDS.test(t) ? "work" : "personal" };
   }
-  if (has(/^(?:meta|objetivo)\b/)) return { kind: "goal", intent: "do", area: FINANCE_WORDS.test(t) ? "finance" : "personal" };
+  if (has(/^(?:meta|objetivo)\b/))
+    return { kind: "goal", intent: "do", area: FINANCE_WORDS.test(t) ? "finance" : "personal" };
   if (has(/\b(receber|recebimento|vou\s+receber|entra(?:r)?\s+(?:o\s+)?(?:pagamento|dinheiro))\b/)) {
     return { kind: "income", intent: "receive", area: "finance", direction: "in" };
   }
@@ -441,7 +530,9 @@ export function interpretText(raw: string, ctx: InterpretContext): Interpretatio
     }
     if (rec.value) {
       draft.recurrence = { freq: rec.value };
-      notes.push(`Repete: ${{ daily: "todo dia", weekly: "toda semana", monthly: "todo mês", yearly: "todo ano" }[rec.value]}`);
+      notes.push(
+        `Repete: ${{ daily: "todo dia", weekly: "toda semana", monthly: "todo mês", yearly: "todo ano" }[rec.value]}`,
+      );
     }
     if (project) notes.push(`Projeto: ${project.name}`);
     if (draft.people?.length) notes.push(`Pessoa: ${draft.people.join(", ")}`);

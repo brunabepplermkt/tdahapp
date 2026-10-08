@@ -20,9 +20,10 @@ const ctx = { today, projects };
 
 describe("splitClauses", () => {
   it("separa por ' e ' seguido de verbo", () => {
-    expect(
-      splitClauses("lembrar de pagar a hospedagem da VPS sexta e ver por que o webhook está falhando"),
-    ).toEqual(["lembrar de pagar a hospedagem da VPS sexta", "ver por que o webhook está falhando"]);
+    expect(splitClauses("lembrar de pagar a hospedagem da VPS sexta e ver por que o webhook está falhando")).toEqual([
+      "lembrar de pagar a hospedagem da VPS sexta",
+      "ver por que o webhook está falhando",
+    ]);
   });
   it("não separa 'e' comum", () => {
     expect(splitClauses("comprar arroz e feijão")).toEqual(["comprar arroz e feijão"]);
@@ -63,10 +64,7 @@ describe("extractDate", () => {
 
 describe("interpretText", () => {
   it("exemplo principal: duas tarefas, conta com prazo + tarefa de trabalho", () => {
-    const r = interpretText(
-      "lembrar de pagar a hospedagem da VPS sexta e ver por que o webhook está falhando",
-      ctx,
-    );
+    const r = interpretText("lembrar de pagar a hospedagem da VPS sexta e ver por que o webhook está falhando", ctx);
     expect(r.drafts).toHaveLength(2);
     const [a, b] = r.drafts;
     expect(a.kind).toBe("bill");

@@ -131,7 +131,13 @@ const readTools: ReadTool[] = [
         .filter((p) => p.status === "active")
         .map((p) => {
           const s = summarizeProject(data, p, ctx.today);
-          return { id: p.id, name: p.name, state: p.currentState, nextAction: s.nextAction?.title ?? null, open: s.open.length };
+          return {
+            id: p.id,
+            name: p.name,
+            state: p.currentState,
+            nextAction: s.nextAction?.title ?? null,
+            open: s.open.length,
+          };
         }),
   },
   {
@@ -222,9 +228,9 @@ const writeTools: WriteTool[] = [
     sensitivity: "internal",
     enabled: true,
     requiresConfirmation: true,
-    describe: (d, input) => `Planejar “${itemTitle(d, input.itemId)}” para ${input.date ? str(input.date).split("-").reverse().slice(0, 2).join("/") : "sem dia"}`,
-    run: (data, input) =>
-      updateItem(data, str(input.itemId), { scheduledDate: (input.date as string | null) ?? null }),
+    describe: (d, input) =>
+      `Planejar “${itemTitle(d, input.itemId)}” para ${input.date ? str(input.date).split("-").reverse().slice(0, 2).join("/") : "sem dia"}`,
+    run: (data, input) => updateItem(data, str(input.itemId), { scheduledDate: (input.date as string | null) ?? null }),
   },
   {
     kind: "write",
@@ -267,7 +273,8 @@ const writeTools: WriteTool[] = [
     sensitivity: "internal",
     enabled: true,
     requiresConfirmation: true,
-    describe: (d, input) => `Quebrar “${itemTitle(d, input.itemId)}” em ${(input.steps as string[])?.length ?? 0} passo(s)`,
+    describe: (d, input) =>
+      `Quebrar “${itemTitle(d, input.itemId)}” em ${(input.steps as string[])?.length ?? 0} passo(s)`,
     run: (data, input) => addSteps(data, str(input.itemId), (input.steps as string[]) ?? []),
   },
   {

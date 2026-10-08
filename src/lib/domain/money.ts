@@ -11,7 +11,10 @@ export function formatBRL(cents: number, compact = false): string {
 
 /** Aceita "120", "120,50", "1.200,00", "R$ 89,90", "1200.5" → centavos. */
 export function parseBRL(input: string): number | null {
-  const cleaned = input.replace(/r\$\s*/i, "").replace(/\s/g, "").trim();
+  const cleaned = input
+    .replace(/r\$\s*/i, "")
+    .replace(/\s/g, "")
+    .trim();
   if (!cleaned) return null;
   let normalized = cleaned;
   if (cleaned.includes(",")) {

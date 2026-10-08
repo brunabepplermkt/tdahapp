@@ -30,7 +30,11 @@ function dayOfMonth(today: ISODate, day: number, nextIfPast = false): ISODate {
 
 export function buildDemoData(today: ISODate): AppData {
   const created = daysAgoISO(today, 6);
-  const project = (p: Omit<Project, "createdAt" | "updatedAt">): Project => ({ ...p, createdAt: created, updatedAt: created });
+  const project = (p: Omit<Project, "createdAt" | "updatedAt">): Project => ({
+    ...p,
+    createdAt: created,
+    updatedAt: created,
+  });
 
   const zeloa = project({
     id: "prj_zeloa",
@@ -125,11 +129,23 @@ export function buildDemoData(today: ISODate): AppData {
     estimateMin: 120,
     people: ["Rafael"],
   });
-  const step1 = add({ title: "Reaproveitar a proposta do piloto 2", parentId: proposta.id, area: "work", projectId: zeloa.id, estimateMin: 15 });
+  const step1 = add({
+    title: "Reaproveitar a proposta do piloto 2",
+    parentId: proposta.id,
+    area: "work",
+    projectId: zeloa.id,
+    estimateMin: 15,
+  });
   step1.status = "done";
   step1.completedAt = daysAgoISO(today, 1);
   add({ title: "Ajustar preço e escopo", parentId: proposta.id, area: "work", projectId: zeloa.id, estimateMin: 30 });
-  add({ title: "Mandar por e-mail para o Rafael", parentId: proposta.id, area: "work", projectId: zeloa.id, estimateMin: 10 });
+  add({
+    title: "Mandar por e-mail para o Rafael",
+    parentId: proposta.id,
+    area: "work",
+    projectId: zeloa.id,
+    estimateMin: 10,
+  });
 
   add({
     title: "Responder Carla sobre o orçamento do site",
@@ -168,18 +184,33 @@ export function buildDemoData(today: ISODate): AppData {
 
   /* ---------- pessoal ---------- */
   add({ title: "Comprar shampoo", kind: "shopping", area: "personal", scheduledDate: today, estimateMin: 10 });
-  const dentista = add({ title: "Marcar dentista", kind: "task", area: "personal", estimateMin: 10 }, { createdDaysAgo: 18 });
+  const dentista = add(
+    { title: "Marcar dentista", kind: "task", area: "personal", estimateMin: 10 },
+    { createdDaysAgo: 18 },
+  );
   dentista.updatedAt = daysAgoISO(today, 18);
-  add({ title: "Renovar CNH", kind: "task", area: "personal", dueDate: addDays(today, -3), estimateMin: 30 }, { createdDaysAgo: 20 });
-  const lampada = add({ title: "Trocar a lâmpada da cozinha", kind: "task", area: "personal", estimateMin: 10 }, { createdDaysAgo: 14 });
+  add(
+    { title: "Renovar CNH", kind: "task", area: "personal", dueDate: addDays(today, -3), estimateMin: 30 },
+    { createdDaysAgo: 20 },
+  );
+  const lampada = add(
+    { title: "Trocar a lâmpada da cozinha", kind: "task", area: "personal", estimateMin: 10 },
+    { createdDaysAgo: 14 },
+  );
   lampada.updatedAt = daysAgoISO(today, 14);
-  add({ title: "Comprar presente da Bia", kind: "shopping", area: "personal", dueDate: addDays(today, 4), estimateMin: 30 });
+  add({
+    title: "Comprar presente da Bia",
+    kind: "shopping",
+    area: "personal",
+    dueDate: addDays(today, 4),
+    estimateMin: 30,
+  });
   add({ title: "Planejar viagem de fim de ano", kind: "task", area: "personal", priority: "low" });
   add({
     title: "Revisão semanal (15 min)",
     kind: "routine",
     area: "personal",
-    scheduledDate: addDays(today, ((7 - new Date(`${today}T12:00:00`).getDay()) % 7) || 7),
+    scheduledDate: addDays(today, (7 - new Date(`${today}T12:00:00`).getDay()) % 7 || 7),
     estimateMin: 15,
     recurrence: { freq: "weekly", seriesId: newId("ser") },
   });
@@ -299,12 +330,26 @@ export function buildDemoData(today: ISODate): AppData {
   });
 
   /* ---------- metas ---------- */
-  add({ title: "Fechar o 3º cliente piloto do Zeloa", kind: "goal", area: "work", projectId: zeloa.id, dueDate: monthEnd(today) });
+  add({
+    title: "Fechar o 3º cliente piloto do Zeloa",
+    kind: "goal",
+    area: "work",
+    projectId: zeloa.id,
+    dueDate: monthEnd(today),
+  });
   add({ title: "Gastar menos de R$ 600 com delivery", kind: "goal", area: "finance", dueDate: monthEnd(today) });
 
   /* ---------- agenda ---------- */
   const ev = (title: string, day: number, start: string, end: string | null, extra: Partial<ItemInput> = {}) =>
-    add({ title, kind: "event", area: "work", scheduledDate: addDays(today, day), startTime: start, endTime: end, ...extra });
+    add({
+      title,
+      kind: "event",
+      area: "work",
+      scheduledDate: addDays(today, day),
+      startTime: start,
+      endTime: end,
+      ...extra,
+    });
   ev("Daily do Zeloa", 0, "10:00", "10:30", { projectId: zeloa.id });
   ev("Call com cliente piloto", 0, "15:00", "16:00", { projectId: zeloa.id, people: ["Rafael"] });
   ev("Academia", 1, "07:00", "08:00", { area: "personal" });
@@ -316,10 +361,30 @@ export function buildDemoData(today: ISODate): AppData {
 
   /* ---------- notas ---------- */
   const notes: Note[] = [
-    { id: newId("note"), projectId: zeloa.id, body: "Piloto 2 pediu relatório semanal por e-mail. Avaliar se vira feature.", createdAt: daysAgoISO(today, 4) },
-    { id: newId("note"), projectId: zeloa.id, body: "Webhook falha quando o gateway demora > 10s. Talvez aumentar timeout.", createdAt: daysAgoISO(today, 1) },
-    { id: newId("note"), projectId: sitio.id, body: "Senha do Beds24 está no gerenciador de senhas (não colocar aqui).", createdAt: daysAgoISO(today, 6) },
-    { id: newId("note"), projectId: copiloto.id, body: "Opções de preço: R$ 29/mês individual ou R$ 99 por equipe.", createdAt: daysAgoISO(today, 5) },
+    {
+      id: newId("note"),
+      projectId: zeloa.id,
+      body: "Piloto 2 pediu relatório semanal por e-mail. Avaliar se vira feature.",
+      createdAt: daysAgoISO(today, 4),
+    },
+    {
+      id: newId("note"),
+      projectId: zeloa.id,
+      body: "Webhook falha quando o gateway demora > 10s. Talvez aumentar timeout.",
+      createdAt: daysAgoISO(today, 1),
+    },
+    {
+      id: newId("note"),
+      projectId: sitio.id,
+      body: "Senha do Beds24 está no gerenciador de senhas (não colocar aqui).",
+      createdAt: daysAgoISO(today, 6),
+    },
+    {
+      id: newId("note"),
+      projectId: copiloto.id,
+      body: "Opções de preço: R$ 29/mês individual ou R$ 99 por equipe.",
+      createdAt: daysAgoISO(today, 5),
+    },
   ];
 
   /* ---------- inbox ---------- */

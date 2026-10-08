@@ -58,15 +58,7 @@ export interface Money {
 
 export interface HistoryEntry {
   at: ISODateTime;
-  type:
-    | "created"
-    | "postponed"
-    | "scheduled"
-    | "completed"
-    | "reopened"
-    | "edited"
-    | "settled"
-    | "moved_to_someday";
+  type: "created" | "postponed" | "scheduled" | "completed" | "reopened" | "edited" | "settled" | "moved_to_someday";
   note?: string;
   from?: ISODate | null;
   to?: ISODate | null;

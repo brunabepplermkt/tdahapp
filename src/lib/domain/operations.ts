@@ -100,14 +100,15 @@ export function completeItem(data: AppData, id: string): AppData {
     if (item.dueDate) base.dueDate = nextOccurrence(item.dueDate, freq, interval);
     if (item.scheduledDate) base.scheduledDate = nextOccurrence(item.scheduledDate, freq, interval);
     const already = data.items.some(
-      (i) =>
-        i.recurrence?.seriesId === item.recurrence!.seriesId &&
-        i.status === "open" &&
-        i.id !== item.id,
+      (i) => i.recurrence?.seriesId === item.recurrence!.seriesId && i.status === "open" && i.id !== item.id,
     );
     if (!already) {
       const { id: _id, history: _h, createdAt: _c, updatedAt: _u, completedAt: _d, ...rest } = item;
-      void _id; void _h; void _c; void _u; void _d;
+      void _id;
+      void _h;
+      void _c;
+      void _u;
+      void _d;
       next = addItem(next, {
         ...rest,
         ...base,
@@ -190,7 +191,10 @@ export function addSteps(data: AppData, parentId: string, titles: string[]): App
  * Capturas
  * ------------------------------------------------------------------------- */
 
-export function addCapture(data: AppData, capture: Omit<Capture, "id" | "createdAt" | "status" | "itemIds">): {
+export function addCapture(
+  data: AppData,
+  capture: Omit<Capture, "id" | "createdAt" | "status" | "itemIds">,
+): {
   data: AppData;
   capture: Capture;
 } {
@@ -282,10 +286,7 @@ export function addNote(data: AppData, input: Omit<Note, "id" | "createdAt">): A
  * Decisões e atividade
  * ------------------------------------------------------------------------- */
 
-export function addDecision(
-  data: AppData,
-  input: Omit<Decision, "id" | "createdAt" | "status">,
-): AppData {
+export function addDecision(data: AppData, input: Omit<Decision, "id" | "createdAt" | "status">): AppData {
   if (input.dedupeKey && data.decisions.some((d) => d.dedupeKey === input.dedupeKey)) return data;
   const decision: Decision = { ...input, id: newId("dec"), createdAt: nowISO(), status: "pending" };
   return { ...data, decisions: [...data.decisions, decision] };

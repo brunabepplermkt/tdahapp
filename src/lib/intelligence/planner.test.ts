@@ -33,7 +33,11 @@ describe("tools", () => {
   it("WRITE de agente vira decisão, não executa", () => {
     const data = buildDemoData(today);
     const item = data.items.find((i) => i.title === "Comprar shampoo")!;
-    const r = executeTool(data, { tool: "complete_item", input: { itemId: item.id } }, { actor: "agent", ctx: { today } });
+    const r = executeTool(
+      data,
+      { tool: "complete_item", input: { itemId: item.id } },
+      { actor: "agent", ctx: { today } },
+    );
     expect(r.status).toBe("needs_confirmation");
     expect(r.data.items.find((i) => i.id === item.id)!.status).toBe("open");
     const decision = pendingDecisions(r.data.decisions, today).find((d) => d.itemId === item.id)!;
