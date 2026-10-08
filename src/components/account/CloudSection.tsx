@@ -69,7 +69,7 @@ export function CloudSection() {
             onChange={(e) => setEmail(e.target.value)}
             aria-label="E-mail para receber o link de acesso"
           />
-          <Button type="submit" size="sm" variant="primary">
+          <Button type="submit" size="sm" variant="primary" className="shrink-0 whitespace-nowrap">
             Enviar link
           </Button>
         </form>

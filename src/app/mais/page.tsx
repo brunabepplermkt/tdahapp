@@ -21,7 +21,7 @@ export default function MorePage() {
 }
 
 const INTEGRATIONS = [
-  { name: "Supabase (sincronizar entre aparelhos)", status: "Preparado, não configurado (veja Conta e nuvem)" },
+  { name: "Supabase (sincronizar entre aparelhos)", status: "Preparado, não configurado" },
   { name: "IA para interpretar capturas", status: "Interface pronta, sem chave" },
   { name: "Google Calendar", status: "Não conectado" },
   { name: "Gmail", status: "Não conectado" },
