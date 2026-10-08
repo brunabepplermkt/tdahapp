@@ -182,7 +182,7 @@ function Month() {
       )}
 
       {offset === 0 && (
-        <Section title="Chegando" hint="O que é importante nos próximos 30 dias.">
+        <Section title="Chegando">
           {view.upcoming.length ? (
             <Group flat>
               {view.upcoming.map((i) => (
@@ -222,13 +222,6 @@ function Month() {
             ))}
           </Group>
         </Section>
-      )}
-
-      {view.unscheduledCount > 0 && (
-        <p className="px-1 text-[14px] text-muted">
-          {view.unscheduledCount} {view.unscheduledCount === 1 ? "item está" : "itens estão"} sem data — tudo bem. O
-          Organizar pode sugerir semanas.
-        </p>
       )}
 
       <PlanSheet open={!!proposal} proposal={proposal} today={today} onClose={() => setProposal(null)} />

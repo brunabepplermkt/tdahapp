@@ -73,9 +73,6 @@ function Finance() {
 
       <Section>
         <MoneyGrid summary={view.money} />
-        <p className="mt-2 px-1 text-[13px] text-muted">
-          Registro manual. Nenhum banco conectado; o app não movimenta dinheiro.
-        </p>
       </Section>
 
       <div className="mb-8">

@@ -12,7 +12,7 @@ import { useStore } from "@/lib/store/store";
 import { useUI } from "@/lib/store/ui";
 import { ItemRow } from "@/components/items/ItemRow";
 import { Ready } from "@/components/shell/AppShell";
-import { IconArrowRight, IconClock, IconPlus, IconSearch } from "@/components/ui/icons";
+import { IconArrowRight, IconClock, IconDecision, IconInbox, IconPlus, IconSearch } from "@/components/ui/icons";
 import { Button, Collapsible, EmptyState, Group, IconButton, PageHeader, Section } from "@/components/ui/primitives";
 
 export default function TodayPage() {
@@ -64,7 +64,7 @@ function Today() {
       : view.priorities.length === 1
         ? "Uma coisa importa hoje."
         : `${view.priorities.length === 2 ? "Duas" : "Três"} coisas importam hoje.`;
-  const subline = view.priorities.length === 0 ? "Respira." : "O resto pode esperar.";
+  const planned = view.priorities.length + view.alsoToday.length;
 
   return (
     <>
@@ -73,28 +73,28 @@ function Today() {
           <IconSearch size={22} />
         </IconButton>
       </PageHeader>
-      <div className="-mt-5 mb-8">
+      <div className="-mt-5 mb-7 flex items-center justify-between gap-5">
         <p className="font-display text-[clamp(1.9rem,8.6vw,2.6rem)] leading-[1.08] font-light tracking-[-0.03em] text-balance text-accent-text">
           {headline}
         </p>
-        <p className="mt-3 text-[16px] text-muted">{subline}</p>
+        {view.doneToday + planned > 0 && <ProgressRing done={view.doneToday} total={view.doneToday + planned} />}
       </div>
 
       {/* captura: convite, não formulário */}
       <button
         ref={prompt}
         onClick={openCapture}
-        className="mb-10 flex h-14 w-full items-center gap-3 rounded-full bg-surface pr-2 pl-5 text-left text-[16px] text-muted shadow-soft ring-1 ring-black/[0.04] transition active:scale-[0.99] lg:hidden"
+        className="mb-7 flex h-14 w-full items-center gap-3 rounded-full bg-surface pr-2 pl-6 text-left text-[17px] text-muted transition active:scale-[0.99] lg:hidden"
       >
-        <span className="flex-1">Joga aqui o que está na cabeça…</span>
-        <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-surface-2 text-ink">
+        <span className="flex-1">Joga aqui…</span>
+        <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-ink text-bg">
           <IconPlus size={20} />
         </span>
       </button>
 
       {/* próximo compromisso, se for logo */}
       {nextEvent && soon !== null && soon <= 90 && (
-        <div className="mb-6 flex items-center gap-3 rounded-[28px] bg-accent-soft px-6 py-4 text-[15px] text-accent-text">
+        <div className="mb-6 flex items-center gap-3 rounded-full bg-accent-soft px-5 py-3 text-[15px] text-accent-text">
           <IconClock size={18} />
           <span className="flex-1">
             {soon <= 0 ? "Agora" : `Em ${soon} min`}: <strong className="font-medium">{nextEvent.title}</strong>
@@ -110,15 +110,10 @@ function Today() {
         </Section>
       ) : (
         <Section title="Agora">
-          <EmptyState title="Nada pegando fogo hoje.">
+          <EmptyState title="Nada pegando fogo.">
             <Link href="/semana" className="font-medium text-accent-text">
-              Escolher uma coisa da semana
-            </Link>{" "}
-            ou{" "}
-            <button onClick={openCapture} className="font-medium text-accent-text">
-              tirar algo da cabeça
-            </button>
-            .
+              Ver a semana
+            </Link>
           </EmptyState>
         </Section>
       )}
@@ -163,7 +158,6 @@ function Today() {
       {view.overdue.length > 0 && (
         <Section
           title="Prazos que passaram"
-          hint="Sem drama: resolva, adie para um dia realista ou solte."
           action={
             view.overdueHiddenCount > 0 ? (
               <Link href="/semana" className="text-[14px] text-muted hover:text-ink">
@@ -180,21 +174,19 @@ function Today() {
         </Section>
       )}
 
-      {/* caixas que pedem atenção, discretas */}
+      {/* o que espera por você: dois blocos visuais, número grande, uma palavra */}
       {(view.inboxCount > 0 || view.pendingDecisions > 0) && (
-        <div className="mb-10 flex flex-wrap gap-2">
+        <div className="mb-10 grid grid-cols-2 gap-3">
           {view.inboxCount > 0 && (
-            <QuietLink
-              href="/inbox"
-              count={view.inboxCount}
-              label={view.inboxCount === 1 ? "coisa para organizar" : "coisas para organizar"}
-            />
+            <Tile href="/inbox" count={view.inboxCount} label="Inbox" tone="lilac" icon={<IconInbox size={22} />} />
           )}
           {view.pendingDecisions > 0 && (
-            <QuietLink
+            <Tile
               href="/decisoes"
               count={view.pendingDecisions}
-              label={view.pendingDecisions === 1 ? "decisão esperando" : "decisões esperando"}
+              label="Decisões"
+              tone="accent"
+              icon={<IconDecision size={22} />}
             />
           )}
         </div>
@@ -202,10 +194,9 @@ function Today() {
 
       {view.resurface && (
         <Section title="Lembra disso?">
-          <div className="rounded-[24px] bg-surface p-5 shadow-soft ring-1 ring-black/[0.03]">
+          <div className="rounded-[28px] bg-surface p-5">
             <p className="t-heading text-[20px] text-ink">{view.resurface.title}</p>
-            <p className="mt-1.5 text-[14px] text-muted">Está parado há um tempo, sem data. Tudo bem — o que fazemos?</p>
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="mt-4 flex flex-wrap gap-2">
               <Button size="sm" onClick={() => updateItem(view.resurface!.id, { scheduledDate: today })}>
                 Hoje
               </Button>
@@ -213,7 +204,7 @@ function Today() {
                 size="sm"
                 onClick={() => apply((d) => postponeItem(d, view.resurface!.id, null), "Volta pra lista da semana.")}
               >
-                Esta semana
+                Semana
               </Button>
               <Button size="sm" variant="ghost" onClick={() => someday(view.resurface!.id)}>
                 Algum dia
@@ -224,7 +215,7 @@ function Today() {
       )}
 
       {view.alsoToday.length > 0 && (
-        <Collapsible title="Também planejado para hoje" count={view.alsoToday.length}>
+        <Collapsible title="Também hoje" count={view.alsoToday.length}>
           <Group flat>
             {view.alsoToday.map((e) => (
               <ItemRow key={e.item.id} item={e.item} parent={e.parent} today={today} showDate={false} />
@@ -235,50 +226,96 @@ function Today() {
 
       {view.slipped.length > 0 && <Slipped items={view.slipped} today={today} />}
 
-      {view.doneToday > 0 && (
-        <p className="mt-12 text-center text-[15px] text-muted">
-          {view.doneToday === 1 ? "1 coisa feita hoje." : `${view.doneToday} coisas feitas hoje.`} Isso conta.
-        </p>
-      )}
     </>
   );
 }
 
 function NowCard({ entry, today }: { entry: TodayEntry; today: string }) {
-  const reason = entry.reasons[0];
   return (
     <div className="aura overflow-hidden rounded-[32px] shadow-soft ring-1 ring-black/[0.04] [--row-bg:transparent] [--row-px:1.5rem]">
       <ItemRow item={entry.item} parent={entry.parent} today={today} emphasis />
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-3 px-6 pb-6">
+      <div className="px-6 pb-6">
         <Link
           href="/foco"
-          className="inline-flex h-12 items-center gap-2 rounded-full bg-ink pr-2 pl-5 text-[15px] font-medium text-bg transition active:scale-[0.98]"
+          className="inline-flex h-14 items-center gap-3 rounded-full bg-ink pr-2 pl-6 text-[16px] font-medium text-bg transition active:scale-[0.98]"
         >
-          Modo foco
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-bg/15">
-            <IconArrowRight size={16} />
+          Foco
+          <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-bg/15">
+            <IconArrowRight size={18} />
           </span>
         </Link>
-        {reason && (
-          <p className="min-w-0 flex-1 text-[14px] leading-snug text-ink-2">
-            <span className="text-muted">Por quê:</span> {reason.toLowerCase()}
-          </p>
-        )}
       </div>
     </div>
   );
 }
 
-function QuietLink({ href, count, label }: { href: string; count: number; label: string }) {
+/** Progresso do dia: anel + número. Recompensa visível, sem texto. */
+function ProgressRing({ done, total }: { done: number; total: number }) {
+  const r = 28;
+  const c = 2 * Math.PI * r;
+  const pct = total ? done / total : 0;
+  return (
+    <div
+      role="img"
+      aria-label={`${done} de ${total} feitas hoje`}
+      className="relative h-[76px] w-[76px] shrink-0 rounded-full bg-surface"
+    >
+      <svg viewBox="0 0 76 76" className="absolute inset-0 -rotate-90" aria-hidden>
+        <circle cx="38" cy="38" r={r} fill="none" strokeWidth="6" className="stroke-surface-2" />
+        <circle
+          cx="38"
+          cy="38"
+          r={r}
+          fill="none"
+          strokeWidth="6"
+          strokeLinecap="round"
+          className="stroke-accent transition-[stroke-dashoffset] duration-700"
+          strokeDasharray={c}
+          strokeDashoffset={c * (1 - pct)}
+        />
+      </svg>
+      <span className="absolute inset-0 flex flex-col items-center justify-center font-display leading-none font-light tabular-nums">
+        <span className="text-[24px] text-ink">{done}</span>
+        <span className="mt-0.5 text-[11px] text-muted">/{total}</span>
+      </span>
+    </div>
+  );
+}
+
+function Tile({
+  href,
+  count,
+  label,
+  tone,
+  icon,
+}: {
+  href: string;
+  count: number;
+  label: string;
+  tone: "lilac" | "accent";
+  icon: React.ReactNode;
+}) {
   return (
     <Link
       href={href}
-      className="inline-flex h-12 items-center gap-2.5 rounded-full bg-surface pr-4 pl-1.5 text-[14px] text-ink-2 ring-1 ring-line-strong/70 transition hover:bg-surface-2"
+      className="flex flex-col gap-5 rounded-[28px] bg-surface p-5 transition active:scale-[0.98]"
+      aria-label={`${label}: ${count}`}
     >
-      <span className="inline-flex h-9 min-w-9 items-center justify-center rounded-full bg-surface-2 px-2 font-display text-[17px] text-ink tabular-nums">
-        {count}
+      <span
+        className={
+          tone === "lilac"
+            ? "inline-flex h-11 w-11 items-center justify-center rounded-full bg-lilac-soft text-lilac"
+            : "inline-flex h-11 w-11 items-center justify-center rounded-full bg-accent-soft text-accent-text"
+        }
+      >
+        {icon}
       </span>
-      {label}
+      <span>
+        <span className="block font-display text-[40px] leading-none font-light tracking-[-0.03em] text-ink tabular-nums">
+          {count}
+        </span>
+        <span className="mt-1.5 block text-[15px] text-muted">{label}</span>
+      </span>
     </Link>
   );
 }
@@ -286,14 +323,7 @@ function QuietLink({ href, count, label }: { href: string; count: number; label:
 function Slipped({ items, today }: { items: Item[]; today: string }) {
   const updateItem = useStore((s) => s.updateItem);
   return (
-    <Collapsible title="Ficou pra trás" count={items.length}>
-      <p className="mb-2 px-1 text-[13px] text-muted">
-        Planejados para dias que já passaram. Traga para hoje só o que couber — ou{" "}
-        <Link href="/semana?organizar=1" className="font-medium text-accent-text">
-          redistribua na semana
-        </Link>
-        .
-      </p>
+    <Collapsible title="Ficou para trás" count={items.length}>
       <Group flat>
         {items.map((i) => (
           <div key={i.id} className="flex items-center">

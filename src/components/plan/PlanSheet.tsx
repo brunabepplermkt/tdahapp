@@ -59,8 +59,7 @@ function PlanBody({ proposal, today, onClose }: { proposal: PlanProposal; today:
   return (
     <div>
       <p className="mb-1 text-[16px] text-ink">{proposal.summary}</p>
-      <p className="mb-5 text-[13px] text-muted">É só uma sugestão. Desmarque o que não fizer sentido.</p>
-
+      
       {proposal.warnings.length > 0 && (
         <ul className="mb-5 space-y-1.5 rounded-2xl bg-warn-soft px-4 py-3 text-[14px] text-warn">
           {proposal.warnings.map((w) => (

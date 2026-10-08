@@ -170,7 +170,7 @@ export function ItemRow({
           {meta.length > 0 && (
             <p className={clsx("flex flex-wrap items-center gap-x-1.5 text-muted", emphasis ? "mt-2.5 text-[15px]" : "mt-1 text-[13.5px]")}>
               {!emphasis && <AreaDot area={item.area} className="mr-0.5" />}
-              {meta.map((m, i) => (
+              {meta.slice(0, 2).map((m, i) => (
                 <span key={i} className="inline-flex items-center gap-1.5">
                   {i > 0 && <span className="text-faint">·</span>}
                   <span className={clsx(m.tone === "danger" && "text-danger", m.tone === "warn" && "text-warn")}>

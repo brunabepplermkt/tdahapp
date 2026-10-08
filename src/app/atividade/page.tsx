@@ -21,10 +21,7 @@ function Activity() {
   const { data } = useApp();
   return (
     <>
-      <PageHeader eyebrow="Histórico de ações" title="Atividade" />
-      <p className="-mt-4 mb-8 max-w-[36ch] text-[16px] leading-snug text-muted">
-        Tudo que foi feito por você ou sugerido pelo assistente local. Útil para auditar um agente no futuro.
-      </p>
+      <PageHeader title="Atividade" />
       {data.activity.length === 0 ? (
         <EmptyState title="Nada ainda." />
       ) : (

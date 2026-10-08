@@ -5,7 +5,7 @@ test("modo foco: uma coisa por vez, pular e concluir", async ({ page }) => {
   await open(page);
   const agora = main(page).locator("section", { has: page.getByRole("heading", { name: "Agora" }) });
   const first = (await agora.locator("p").first().innerText()).trim();
-  await page.getByRole("link", { name: "Modo foco" }).click();
+  await page.getByRole("link", { name: "Foco", exact: true }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(first);
 
   await page.getByRole("button", { name: "Pular" }).click();

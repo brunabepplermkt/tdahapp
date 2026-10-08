@@ -180,7 +180,7 @@ function ItemDetail({ item, today, onClose }: { item: Item; today: ISODate; onCl
 
       {showSnooze && !done && (
         <div className="mb-5 animate-fade rounded-[24px] bg-surface p-4 shadow-soft ring-1 ring-black/[0.03]">
-          <p className="mb-2 px-1 text-[13px] text-muted">Sem culpa. Quando você quer ver isso de novo?</p>
+          <p className="t-label mb-2 px-1">Quando?</p>
           <div className="flex flex-wrap gap-2">
             {snoozeOptions(today).map((o) => (
               <Button

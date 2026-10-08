@@ -16,7 +16,7 @@ import { useStore } from "@/lib/store/store";
 import { useUI } from "@/lib/store/ui";
 import { DraftChips, DraftEditor } from "@/components/capture/DraftView";
 import { Ready } from "@/components/shell/AppShell";
-import { Button, EmptyState, PageHeader } from "@/components/ui/primitives";
+import { Button, EmptyState, PageHeader, Pill } from "@/components/ui/primitives";
 
 export default function InboxPage() {
   return (
@@ -46,7 +46,7 @@ function Inbox() {
 
   return (
     <>
-      <PageHeader eyebrow="Tudo que você tirou da cabeça" title="Inbox" />
+      <PageHeader title="Inbox" />
 
       {list.length === 0 ? (
         <EmptyState title="Inbox zerada. Cabeça leve.">
@@ -57,9 +57,7 @@ function Inbox() {
       ) : (
         <>
           <div className="mb-2 flex items-center justify-between gap-3">
-            <p className="text-[15px] text-muted">
-              {list.length === 1 ? "1 coisa" : `${list.length} coisas`}. Aceite, ajuste ou solte.
-            </p>
+            <p className="font-display text-[22px] font-light text-ink tabular-nums">{list.length}</p>
             {confident.length > 1 && (
               <Button
                 size="sm"
@@ -122,7 +120,7 @@ function CaptureCard({
   return (
     <article className="py-7">
       <div className="mb-4 flex items-baseline justify-between gap-3">
-        <p className="font-display text-[22px] leading-[1.25] font-light tracking-[-0.02em] text-ink">“{capture.text}”</p>
+        <p className="font-display text-[20px] leading-[1.25] font-light tracking-[-0.02em] text-ink">“{capture.text}”</p>
         <span className="shrink-0 text-[13px] text-muted">{timeAgo(capture.createdAt)}</span>
       </div>
 
@@ -130,7 +128,9 @@ function CaptureCard({
         <div className="mb-5 space-y-3.5 border-l-2 border-line-strong pl-4">
           {drafts.map((d, i) => (
             <div key={i}>
-              <p className="mb-2 text-[16px] text-ink-2">{d.title}</p>
+              {(drafts.length > 1 || d.title.trim().toLowerCase() !== capture.text.trim().toLowerCase()) && (
+                <p className="mb-2 text-[16px] text-ink-2">{d.title}</p>
+              )}
               <DraftChips draft={d} today={today} projects={projects} />
             </div>
           ))}
@@ -139,8 +139,7 @@ function CaptureCard({
               Interpretar
             </button>
           )}
-          {interp && interp.notes.length > 0 && <p className="text-[13px] text-muted">{interp.notes.join(" · ")}</p>}
-          {unsure && drafts.length > 0 && <p className="text-[13px] text-warn">Não tenho certeza — vale conferir.</p>}
+                    {unsure && drafts.length > 0 && <Pill tone="warn">conferir</Pill>}
         </div>
       ) : (
         <div className="mb-4 space-y-5">

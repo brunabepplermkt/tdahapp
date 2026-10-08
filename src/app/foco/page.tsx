@@ -134,7 +134,7 @@ function Focus() {
                   </button>
                 </div>
               )}
-              {timeUp && <p className="mt-3 text-[16px] text-ink-2">Pausa curta. Terminou ou quer mais uma rodada?</p>}
+              {timeUp && <p className="mt-3 text-[16px] text-ink-2">Terminou?</p>}
             </div>
           </div>
         ) : (

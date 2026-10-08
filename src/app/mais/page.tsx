@@ -92,7 +92,7 @@ function More() {
         </Group>
       </Section>
 
-      <Section title="Seus dados" hint={`Guardados ${repository.label.toLowerCase()}. Nada sai daqui.`}>
+      <Section title="Seus dados">
         <div className="flex flex-wrap gap-2">
           <Button size="sm" onClick={exportJson}>
             Exportar backup (JSON)
@@ -151,22 +151,19 @@ function More() {
 
       <CloudSection />
 
-      <Section title="Integrações" hint="Nada externo está conectado. Cada uma exigirá sua autorização explícita.">
+      <Collapsible title="Integrações" count={INTEGRATIONS.length}>
         <Group>
           {INTEGRATIONS.map((i) => (
             <div key={i.name} className="flex items-center justify-between gap-3 px-4 py-3">
-              <span className="text-[14px] text-ink">{i.name}</span>
-              <span className="shrink-0 text-[12px] text-muted">{i.status}</span>
+              <span className="text-[15px] text-ink">{i.name.split(" (")[0]}</span>
+              <span className="shrink-0 text-[13px] text-muted">{i.status.includes("não") || i.status.includes("Não") ? "desligado" : i.status}</span>
             </div>
           ))}
         </Group>
-      </Section>
+      </Collapsible>
 
       <Section title="Inteligência">
-        <p className="mb-3 px-1 text-[14px] text-ink-2">
-          Interpretação atual: <strong className="font-medium">{listInterpreters()[0].label}</strong>. O assistente
-          local só sugere — toda ação que muda seus dados passa pela fila de Decisões.
-        </p>
+        <p className="mb-3 px-1 text-[15px] text-ink-2">{listInterpreters()[0].label}</p>
         <Collapsible title="Ferramentas disponíveis para um agente" count={tools.length}>
           <div className="space-y-4">
             {(["read", "write"] as const).map((kind) => (
@@ -196,7 +193,7 @@ function More() {
         </Collapsible>
       </Section>
 
-      <p className="mt-10 text-center text-[13px] text-muted">Leve · MVP local · dados fictícios de exemplo</p>
+      <p className="mt-10 text-center text-[13px] text-muted">Leve</p>
     </>
   );
 }

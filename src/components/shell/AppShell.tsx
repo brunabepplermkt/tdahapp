@@ -213,7 +213,7 @@ function DesktopNav({ pathname, badges }: { pathname: string; badges: Badges }) 
 
 function MobileNav({ pathname, badges }: { pathname: string; badges: Badges }) {
   return (
-    <div className="mx-auto flex max-w-md gap-1 rounded-full bg-surface/90 p-1.5 shadow-float ring-1 ring-black/[0.05] backdrop-blur-xl">
+    <div className="mx-auto flex max-w-md gap-1 rounded-full bg-bg/92 p-1.5 shadow-float ring-1 ring-line-strong/60 backdrop-blur-xl">
       {MOBILE_NAV.map((n) => {
         const active = isActive(pathname, n.href);
         const count = n.badge ? badges[n.badge] : 0;

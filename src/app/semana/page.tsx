@@ -59,7 +59,7 @@ function Week() {
   return (
     <>
       <PageHeader
-        eyebrow={offset === 0 ? `Esta semana · ${range}` : offset === 1 ? `Semana que vem · ${range}` : range}
+        eyebrow={range}
         title="Semana"
       >
         <div className="flex">
@@ -99,7 +99,7 @@ function Week() {
 
       {offset === 0 && view.slipped.length > 0 && (
         <p className="mb-8 rounded-[28px] bg-accent-soft px-6 py-4 text-[15px] leading-snug text-ink-2">
-          {view.slipped.length === 1 ? "1 item ficou" : `${view.slipped.length} itens ficaram`} de dias anteriores.{" "}
+          {view.slipped.length} para trás.{" "}
           <button onClick={organize} className="font-medium text-accent-text">
             Redistribuir
           </button>
@@ -120,8 +120,7 @@ function Week() {
 
       {view.unscheduled.length > 0 && (
         <Section
-          title="Sem dia ainda"
-          hint="Não precisa planejar tudo. Toque para escolher um dia, ou deixe o Organizar sugerir."
+          title="Sem dia"
         >
           <Group flat>
             {view.unscheduled.slice(0, 8).map((i) => (
@@ -129,7 +128,7 @@ function Week() {
             ))}
           </Group>
           {view.unscheduled.length > 8 && (
-            <p className="mt-3 px-1 text-[14px] text-muted">+{view.unscheduled.length - 8} outros sem data.</p>
+            <p className="mt-3 px-1 text-[14px] text-muted">+{view.unscheduled.length - 8}</p>
           )}
         </Section>
       )}

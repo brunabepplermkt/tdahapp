@@ -19,12 +19,12 @@ export function CloudSection() {
 
   if (s.status === "unconfigured" || s.status === "loading") {
     return (
-      <Section title="Conta e nuvem" hint="Modo local: tudo fica só neste aparelho.">
+      <Section title="Conta e nuvem">
         <Group>
           <div className="flex items-center justify-between gap-3 px-4 py-3" data-testid="cloud-status">
             <span className="text-[14px] text-ink">Sincronização</span>
             <span className="shrink-0 text-[12px] text-muted">
-              {s.status === "loading" ? "Verificando…" : "Desligada (sem Supabase configurado)"}
+              {s.status === "loading" ? "…" : "Desligada"}
             </span>
           </div>
         </Group>
@@ -35,15 +35,15 @@ export function CloudSection() {
   const count = data.items.length + data.projects.length + data.captures.length + data.notes.length + data.decisions.length;
 
   return (
-    <Section title="Conta e nuvem" hint="Seus dados continuam salvos neste aparelho primeiro; a nuvem é uma cópia sincronizada.">
+    <Section title="Conta e nuvem" >
       <Group>
         <div className="px-4 py-3" data-testid="cloud-status">
           <p className="text-[14px] text-ink">
             {s.status === "signed_out" && "Sem conta conectada"}
-            {s.status === "link_sent" && `Link enviado para ${s.email}. Abra o e-mail neste aparelho.`}
+            {s.status === "link_sent" && "Link enviado. Abra o e-mail."}
             {s.status === "syncing" && "Sincronizando…"}
-            {s.status === "offline" && "Sem conexão — suas alterações estão salvas aqui e seguem quando voltar."}
-            {s.status === "error" && "Algo falhou — seus dados locais estão intactos."}
+            {s.status === "offline" && "Offline — salvo aqui"}
+            {s.status === "error" && "Falhou — dados locais intactos"}
             {s.status === "ready" && (s.migrated ? "Sincronizado" : `Conectado como ${s.email ?? "você"}`)}
           </p>
           {s.lastError && <p className="mt-1 text-[12px] text-danger">{s.lastError}</p>}

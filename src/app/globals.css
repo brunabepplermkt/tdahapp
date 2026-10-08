@@ -12,23 +12,25 @@
  * Contrastes: texto ≥ 4.5:1 sobre --bg e --surface (accent-text, muted, danger, warn, ok checados).
  */
 :root {
-  --bg: #f4f3f1;
-  --surface: #ffffff;
-  --surface-2: #f1f0ed;
-  --ink: #151413;
-  --ink-2: #4a4845;
-  --muted: #6c6965;
-  --faint: #98958f; /* só decorativo/placeholder: nunca para texto que precise ser lido */
-  --line: #e9e7e3;
-  --line-strong: #d9d6d0;
+  --bg: #ffffff; /* fundo branco puro */
+  --surface: #f6f6fb; /* cards: lavanda-gelo bem clara */
+  --surface-2: #ececf4; /* chips, campos, controles */
+  --ink: #14141a;
+  --ink-2: #474750;
+  --muted: #666672;
+  --faint: #9a9aa6; /* só decorativo/placeholder: nunca para texto que precise ser lido */
+  --line: #ebebf2;
+  --line-strong: #d8d8e4;
 
   --accent: #c24a56; /* preenchimentos (texto branco: 4.7:1) */
   --accent-ink: #ffffff;
   --accent-text: #b0404c; /* texto/ícone coral sobre claro */
-  --accent-soft: #fbeaeb;
-  --aura-1: #f6c4c0; /* “momentos visuais”: manchas suaves, só no hero e no foco */
-  --aura-2: #d8d0f2;
-  --aura-3: #f8dcc8;
+  --accent-soft: #fdecee;
+  --lilac: #8b7ff0; /* acento secundário (só em ícones/blocos) */
+  --lilac-soft: #ecebfd;
+  --aura-1: #f8cdca; /* “momentos visuais”: manchas suaves, só no hero e no foco */
+  --aura-2: #d5ccf6;
+  --aura-3: #fbe3d3;
 
   --danger: #98302a;
   --danger-soft: #f8e7e4;
@@ -42,8 +44,8 @@
 
   --radius-card: 28px;
   --radius-sheet: 32px;
-  --elev-1: 0 1px 0 rgb(20 18 12 / 0.03), 0 14px 36px -14px rgb(20 18 12 / 0.1);
-  --elev-2: 0 1px 0 rgb(20 18 12 / 0.04), 0 18px 40px -12px rgb(20 18 12 / 0.18);
+  --elev-1: 0 10px 30px -14px rgb(60 50 120 / 0.14);
+  --elev-2: 0 1px 0 rgb(60 50 120 / 0.04), 0 18px 40px -12px rgb(60 50 120 / 0.22);
   color-scheme: light;
 }
 
@@ -62,6 +64,8 @@
     --accent-ink: #1c0f10;
     --accent-text: #f09098;
     --accent-soft: #3a2224;
+    --lilac: #a79df5;
+    --lilac-soft: #2a2745;
     --aura-1: #5a2f33;
     --aura-2: #2f2a4a;
     --aura-3: #4a3426;
@@ -94,6 +98,8 @@
   --color-accent-ink: var(--accent-ink);
   --color-accent-text: var(--accent-text);
   --color-accent-soft: var(--accent-soft);
+  --color-lilac: var(--lilac);
+  --color-lilac-soft: var(--lilac-soft);
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
   --color-warn: var(--warn);
@@ -163,7 +169,7 @@ body {
 
 /* mancha de cor suave: o único “momento visual” (hero do Agora, modo foco) */
 .aura {
-  background-color: var(--surface);
+  background-color: var(--bg);
   background-image:
     radial-gradient(90% 70% at 100% 0%, color-mix(in srgb, var(--aura-1) 70%, transparent) 0%, transparent 62%),
     radial-gradient(80% 70% at 0% 100%, color-mix(in srgb, var(--aura-2) 55%, transparent) 0%, transparent 65%),

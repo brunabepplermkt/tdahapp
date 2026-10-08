@@ -4,9 +4,8 @@ import Link from "next/link";
 import { addDays } from "@/lib/domain/dates";
 import { resolveDecision } from "@/lib/domain/operations";
 import { pendingDecisions } from "@/lib/domain/selectors";
-import type { AppData, Decision, DecisionKind } from "@/lib/domain/types";
+import type { Decision, DecisionKind } from "@/lib/domain/types";
 import { useApp } from "@/lib/hooks/useApp";
-import { describeCall } from "@/lib/tools";
 import { useStore } from "@/lib/store/store";
 import { useUI } from "@/lib/store/ui";
 import { Ready } from "@/components/shell/AppShell";
@@ -28,10 +27,6 @@ const KIND: Record<DecisionKind, { label: string; tone: "warn" | "accent" | "neu
   agent_suggestion: { label: "Sugestão", tone: "neutral" },
 };
 
-function describeActions(data: AppData, d: Decision): string[] {
-  return d.actions.map((a) => describeCall(data, a));
-}
-
 function Decisions() {
   const { data, today } = useApp();
   // pagamentos e respostas primeiro; sugestões do assistente por último
@@ -44,11 +39,7 @@ function Decisions() {
 
   return (
     <>
-      <PageHeader eyebrow="Só você decide" title="Decisões" />
-      <p className="-mt-4 mb-9 max-w-[34ch] text-[16px] leading-snug text-muted">
-        Só o que espera um sim ou um não seu. O app nunca paga, envia ou publica nada de verdade.
-      </p>
-
+      <PageHeader title="Decisões" />
       {list.length === 0 ? (
         <EmptyState title="Nenhuma decisão pendente." />
       ) : (
@@ -77,30 +68,21 @@ function Decisions() {
 }
 
 function DecisionCard({ decision, today }: { decision: Decision; today: string }) {
-  const data = useStore((s) => s.data);
   const approve = useStore((s) => s.approveDecision);
   const apply = useStore((s) => s.apply);
   const openItem = useUI((s) => s.openItem);
   const kind = KIND[decision.kind];
-  const effects = describeActions(data, decision);
-
+  
   return (
     <article className="rounded-[28px] bg-surface p-6 shadow-soft ring-1 ring-black/[0.03]">
       <div className="mb-3 flex items-center gap-2">
         <Pill tone={kind.tone}>{kind.label}</Pill>
         {decision.createdBy === "agent" && (
-          <span className="text-[13px] text-muted">
-            {decision.actions[0]?.origin === "agent" ? "sugerido por um agente" : "sugerido pelo assistente local"}
-          </span>
+          <span className="text-[13px] text-muted">{decision.actions[0]?.origin === "agent" ? "agente" : "assistente"}</span>
         )}
       </div>
       <h3 className="t-heading text-[22px] leading-[1.25] text-ink">{decision.title}</h3>
-      {decision.context && <p className="mt-2 text-[15px] leading-snug text-ink-2">{decision.context}</p>}
-      {effects.length > 0 && (
-        <p className="mt-3 text-[14px] text-muted">
-          Ao aprovar: {effects.join("; ").replace(/^./, (c) => c.toLowerCase())}.
-        </p>
-      )}
+      {decision.context && <p className="mt-2 text-[15px] text-ink-2">{decision.context.split(/(?<=\.)\s/)[0]}</p>}
       <div className="mt-5 flex flex-wrap gap-2">
         <Button variant="primary" size="sm" onClick={() => approve(decision)}>
           {decision.kind === "pay" ? "Já paguei" : "Aprovar"}

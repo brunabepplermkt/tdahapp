@@ -25,11 +25,11 @@ export default function ReviewPage() {
 }
 
 const STEPS = [
-  { title: "Esvaziar a Inbox", hint: "Aceite o que está claro. O resto pode ser arquivado sem culpa." },
-  { title: "O que ficou pra trás", hint: "Para cada um: ainda importa? Quando, de verdade?" },
-  { title: "Projetos", hint: "Cada projeto ativo precisa de uma próxima ação. Uma frase basta." },
-  { title: "Coisas esquecidas", hint: "Sem data há um tempo. Decida rápido — não precisa fazer agora." },
-  { title: "Próxima semana", hint: "Deixe o app sugerir uma distribuição. Você revisa antes." },
+  { title: "Esvaziar a Inbox", hint: "Aceite ou solte." },
+  { title: "O que ficou pra trás", hint: "Ainda importa? Quando?" },
+  { title: "Projetos", hint: "Uma próxima ação cada." },
+  { title: "Coisas esquecidas", hint: "Decida rápido." },
+  { title: "Próxima semana", hint: "Revise a sugestão." },
 ] as const;
 
 /** Revisão semanal em 5 passos curtos (~10 min). Cada passo mostra só o necessário. */
@@ -44,9 +44,8 @@ function Review() {
         <span className="mx-auto mb-5 inline-flex h-16 w-16 animate-pop items-center justify-center rounded-full bg-ok text-white">
           <IconCheck size={32} strokeWidth={2.5} />
         </span>
-        <h1 className="text-[26px] font-semibold text-ink">Revisão feita.</h1>
-        <p className="mt-2 text-[15px] text-muted">Sua cabeça pode descansar. O que importa está no lugar.</p>
-        <Link href="/" className="mt-8 inline-block text-[15px] font-medium text-accent-text">
+        <h1 className="t-title text-ink">Revisão feita.</h1>
+                <Link href="/" className="mt-8 inline-block text-[15px] font-medium text-accent-text">
           Ir para o Hoje
         </Link>
       </div>
@@ -55,13 +54,13 @@ function Review() {
 
   return (
     <>
-      <PageHeader eyebrow={`Revisão semanal · ${step + 1} de ${STEPS.length}`} title={STEPS[step].title} />
+      <PageHeader eyebrow={`${step + 1} de ${STEPS.length}`} title={STEPS[step].title} />
       <div className="-mt-4 mb-6 flex gap-1.5" aria-hidden>
         {STEPS.map((_, i) => (
           <span key={i} className={clsx("h-1 flex-1 rounded-full", i <= step ? "bg-accent" : "bg-line")} />
         ))}
       </div>
-      <p className="mb-6 text-[15px] text-ink-2">{STEPS[step].hint}</p>
+      <p className="mb-6 text-[16px] text-muted">{STEPS[step].hint}</p>
 
       {step === 0 && <InboxStep />}
       {step === 1 && <SlippedStep />}

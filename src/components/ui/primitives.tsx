@@ -88,9 +88,9 @@ export function Section({
   className?: string;
 }) {
   return (
-    <section className={clsx("mb-10", className)}>
+    <section className={clsx("mb-9", className)}>
       {(title || action) && (
-        <div className="mb-3 flex items-baseline justify-between gap-3 px-1">
+        <div className="mb-2.5 flex items-baseline justify-between gap-3 px-1">
           <h2 className="t-heading text-[19px] text-ink">{title}</h2>
           {action}
         </div>
