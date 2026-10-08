@@ -7,8 +7,15 @@ import { createToolGateway, type GatewayStore } from "./gateway";
 
 const today = "2026-10-08";
 
-function memoryStore(initial: AppData) {
-  const s = {
+interface MemoryStore extends GatewayStore {
+  data: AppData;
+  saves: number;
+  failSaves: number;
+  failLoad: boolean;
+}
+
+function memoryStore(initial: AppData): MemoryStore {
+  const s: MemoryStore = {
     data: initial,
     saves: 0,
     failSaves: 0,
@@ -25,7 +32,7 @@ function memoryStore(initial: AppData) {
       s.saves++;
       s.data = d;
     },
-  } satisfies GatewayStore & Record<string, unknown>;
+  };
   return s;
 }
 const agent = (store: GatewayStore, interpreter?: CaptureInterpreter) =>

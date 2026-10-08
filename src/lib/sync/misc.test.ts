@@ -66,3 +66,19 @@ describe("rebaseData — a pessoa continua usando o app durante a sincronizaçã
     expect(rebaseData(snap, merged, current).items.find((i) => i.id === id)!.title).toBe("local");
   });
 });
+
+import { checkOwner, claimOwner } from "./owner";
+
+describe("dono dos dados locais", () => {
+  const kv = () => {
+    const m = new Map<string, string>();
+    return { getItem: (k: string) => m.get(k) ?? null, setItem: (k: string, v: string) => void m.set(k, v) };
+  };
+  it("livre até a primeira migração; depois só a mesma conta", () => {
+    const s = kv();
+    expect(checkOwner("A", s)).toBe("free");
+    claimOwner("A", s);
+    expect(checkOwner("A", s)).toBe("same");
+    expect(checkOwner("B", s)).toBe("other");
+  });
+});

@@ -24,6 +24,7 @@ type Dev = ReturnType<typeof device>;
 async function sync(d: Dev, opts: { migrate?: boolean } = {}) {
   const r = await d.engine.reconcile(d.data, opts);
   d.data = r.data;
+  r.commit(); // como o controlador: depois de aplicar os dados localmente
   return r;
 }
 async function push(d: Dev, opts?: { allowMassDelete?: boolean }) {
@@ -226,6 +227,21 @@ describe("dois aparelhos", () => {
     await push(d2);
     await sync(d1);
     expect(d1.data.items.some((i) => i.title === "Shampoo sem sulfato")).toBe(true);
+  });
+
+  it("app fechado entre receber e aplicar: NÃO interpreta como 'apagado aqui' (nada some da nuvem)", async () => {
+    const be = new FakeBackend();
+    const demo = buildDemoData(today);
+    await sync(device(be, A, demo), { migrate: true });
+    const before = remoteCount(be, A);
+    const d2 = device(be, A, { ...demo, items: [], captures: [], projects: [], notes: [], decisions: [], activity: [] });
+    const r = await d2.engine.reconcile(d2.data); // recebeu tudo, mas o app caiu: sem commit() e sem salvar localmente
+    expect(r.ok && r.report.pulled).toBeGreaterThan(0);
+    d2.restart();
+    const again = await d2.engine.reconcile(d2.data); // continua com dados locais vazios
+    expect(again.ok && again.report.deletedRemote).toBe(0);
+    expect(again.ok && again.report.pulled).toBeGreaterThan(0); // traz de novo
+    expect(remoteCount(be, A)).toBe(before);
   });
 
   it("apagar propaga só o que já estava sincronizado; edição local vence apagamento remoto", async () => {

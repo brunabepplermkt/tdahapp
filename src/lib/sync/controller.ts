@@ -12,6 +12,7 @@ import { create } from "zustand";
 import type { AppData } from "@/lib/domain/types";
 import { readSupabaseConfig } from "./config";
 import { SyncEngine, type SyncReport, type SyncResult } from "./engine";
+import { checkOwner, claimOwner } from "./owner";
 import { rebaseData } from "./rebase";
 import { LocalStorageSyncState } from "./state";
 
@@ -57,7 +58,8 @@ export const useSync = create<SyncStore>((set, get) => {
   const apply = (r: SyncResult, snapshot: AppData) => {
     if (!hooks) return;
     if (r.data !== snapshot) hooks.setData(rebaseData(snapshot, r.data, hooks.getData()));
-    const st = r.state;
+    r.commit(); // só agora o que veio do remoto conta como "já aplicado aqui"
+    const st = engine?.state() ?? r.state;
     if (r.ok) {
       set({
         status: "ready", lastSyncAt: st.lastSyncAt ?? null, migrated: !!st.migratedAt, lastError: null,
@@ -107,6 +109,16 @@ export const useSync = create<SyncStore>((set, get) => {
     }
     const { SupabaseRemote } = await import("./supabase");
     userId = session.user.id;
+    if (checkOwner(userId) === "other") {
+      // outra conta já usou estes dados locais: não misturar
+      engine = null;
+      set({
+        status: "error", email: session.user.email ?? null, migrated: false,
+        lastError:
+          "Os dados deste aparelho pertencem a outra conta. Saia, exporte um backup e use “Começar do zero” antes de entrar com esta conta.",
+      });
+      return;
+    }
     engine = new SyncEngine(new SupabaseRemote(client, userId), stateStore);
     const st = engine.state();
     set({ status: "ready", email: session.user.email ?? null, migrated: !!st.migratedAt, lastSyncAt: st.lastSyncAt ?? null });
@@ -163,6 +175,7 @@ export const useSync = create<SyncStore>((set, get) => {
         const snapshot = hooks!.getData();
         set({ status: "syncing", lastError: null });
         await hooks!.backup("antes de enviar para a nuvem");
+        claimOwner(userId!);
         apply(await engine!.reconcile(snapshot, { migrate: true }), snapshot);
       });
     },

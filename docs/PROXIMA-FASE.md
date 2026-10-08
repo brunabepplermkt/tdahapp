@@ -2,19 +2,19 @@
 
 Em ordem sugerida. Itens marcados com 🔑 precisam de decisão/credencial sua.
 
-## 1. Dados na nuvem
-- 🔑 Criar projeto Supabase e aplicar `supabase/migrations/0001_init.sql`.
-- Implementar `SupabaseRepository` (mesma interface de `src/lib/store/repository.ts`); trocar o save do
-  “estado inteiro” por gravações por entidade.
-- Supabase Auth (link mágico por e-mail) + tela de login; migrar dados locais na primeira entrada.
-- Sincronização entre iPhone e desktop; tratamento de conflito simples (último a escrever vence, por item).
+## 1. Dados na nuvem  _(código pronto no Bloco 3 — falta ligar)_
+- ✅ Schema + RLS (0001/0002), repositório/motor de sync, conta por link, migração idempotente, testes em Postgres real.
+- 🔑 Criar projeto Supabase, aplicar as migrations (`supabase db push`), configurar Auth (link mágico + URL de redirect)
+  e preencher `NEXT_PUBLIC_SUPABASE_URL/ANON_KEY`. Testar o adaptador `sync/supabase.ts` contra o projeto real
+  (hoje só testado por contrato + fake + Postgres em memória).
+- Tombstones para apagar entre aparelhos sem ambiguidade; Realtime em vez de puxar ao voltar ao app.
 
 ## 2. Inteligência real
-- 🔑 Provider LLM para `CaptureInterpreter` via Route Handler no servidor (chave só no servidor), com o heurístico
-  como fallback e para preview instantâneo.
+- ✅ Schema estruturado + validação + pipeline com fallback local.
+- 🔑 Provider LLM atrás de uma Route Handler no servidor (chave só no servidor) implementando `StructuredProvider`.
 - Usar o LLM também em: quebrar tarefas, explicar prioridades, revisar a semana.
-- Agente (Hermes ou outro) consumindo `toolManifest()` + `executeTool()`; tudo que escreve passa por Decisões.
-- Lembrar contexto: ligar capturas a notas/pessoas/projetos já existentes.
+- **Hermes** via `createToolGateway` (ver ARQUITETURA §8c): endpoint autenticado, concessões (`agent_grants`), mapeamento
+  canal → usuário, rate limit. Tudo que escreve (além de capturar) passa por Decisões.
 
 ## 3. Integrações (cada uma com autorização explícita)
 - 🔑 Google Calendar (leitura primeiro: compromissos no Hoje/Semana; escrita só via Decisões).

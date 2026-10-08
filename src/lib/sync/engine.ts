@@ -39,9 +39,15 @@ export interface SyncReport {
   warnings: string[];
 }
 
+/**
+ * `commit()` registra na base o que veio do remoto. Só deve ser chamado DEPOIS de os
+ * dados mesclados terem sido salvos localmente: se o app fechar antes, a próxima
+ * sincronização simplesmente traz tudo de novo (nunca confunde "ainda não aplicado"
+ * com "apagado aqui").
+ */
 export type SyncResult =
-  | { ok: true; data: AppData; report: SyncReport; state: SyncState }
-  | { ok: false; data: AppData; report: SyncReport; state: SyncState; error: Error; retryable: boolean };
+  | { ok: true; data: AppData; report: SyncReport; state: SyncState; commit(): void }
+  | { ok: false; data: AppData; report: SyncReport; state: SyncState; error: Error; retryable: boolean; commit(): void };
 
 export interface EngineOptions {
   chunkSize?: number;
@@ -53,6 +59,8 @@ interface Plan {
   adopt: TableRows;
   deleteLocal: Record<SyncTable, string[]>;
   base: SyncState["base"];
+  /** mudanças de base que dependem de o dado local já ter sido aplicado */
+  deferred: { set: Record<SyncTable, Record<string, string>>; del: Record<SyncTable, string[]> };
   conflicts: number;
 }
 
@@ -141,7 +149,14 @@ export class SyncEngine {
   /* ------------------------------------------------------------------ plano */
 
   private emptyPlan(base: SyncState["base"]): Plan {
-    return { upserts: emptyRows(), deleteRemote: emptyIds(), adopt: emptyRows(), deleteLocal: emptyIds(), base, conflicts: 0 };
+    return {
+      upserts: emptyRows(), deleteRemote: emptyIds(), adopt: emptyRows(), deleteLocal: emptyIds(), base,
+      deferred: {
+        set: Object.fromEntries(SYNC_TABLES.map((t) => [t, {}])) as Plan["deferred"]["set"],
+        del: emptyIds(),
+      },
+      conflicts: 0,
+    };
   }
 
   private plan(local: TableRows, remote: TableRows, baseIn: SyncState["base"], allowDeletes: boolean): Plan {
@@ -161,21 +176,21 @@ export class SyncEngine {
         if (l && r) {
           if (lh === rh) base[id] = lh!;
           else if (append) base[id] = rh!;
-          else if (b === lh) this.adopt(plan, t, r, base, rh!);
+          else if (b === lh) this.adopt(plan, t, r, rh!);
           else if (b === rh) plan.upserts[t].push(l);
           else {
             plan.conflicts++;
-            if (rowStamp(t, r) > rowStamp(t, l)) this.adopt(plan, t, r, base, rh!);
+            if (rowStamp(t, r) > rowStamp(t, l)) this.adopt(plan, t, r, rh!);
             else plan.upserts[t].push(l);
           }
         } else if (l) {
           if (append || b === undefined || lh !== b) plan.upserts[t].push(l);
           else {
             plan.deleteLocal[t].push(id); // já estava sincronizado e sumiu do remoto
-            delete base[id];
+            plan.deferred.del[t].push(id);
           }
         } else if (r) {
-          if (append || b === undefined || rh !== b) this.adopt(plan, t, r, base, rh!);
+          if (append || b === undefined || rh !== b) this.adopt(plan, t, r, rh!);
           else plan.deleteRemote[t].push(id); // já estava sincronizado e foi apagado aqui
         } else delete base[id];
       }
@@ -183,9 +198,9 @@ export class SyncEngine {
     return plan;
   }
 
-  private adopt(plan: Plan, t: SyncTable, row: Row, base: Record<string, string>, hash: string) {
+  private adopt(plan: Plan, t: SyncTable, row: Row, hash: string) {
     plan.adopt[t].push(row);
-    base[String(row.id)] = hash;
+    plan.deferred.set[t][String(row.id)] = hash;
   }
 
   private applyRemote(data: AppData, plan: Plan, local: TableRows, remote: TableRows): AppData {
@@ -263,18 +278,29 @@ export class SyncEngine {
         }
       }
     } catch (e) {
-      return this.fail(data, state, report, e);
+      return this.fail(data, state, report, e, this.committer(plan));
     }
 
     state.lastSyncAt = new Date().toISOString();
     if (migrating) state.migratedAt ??= state.lastSyncAt;
     this.store.save(this.userId, state);
-    return { ok: true, data, report, state };
+    return { ok: true, data, report, state, commit: this.committer(plan) };
   }
 
-  private fail(data: AppData, state: SyncState, report: SyncReport, e: unknown): SyncResult {
+  private committer(plan: Plan): () => void {
+    return () => {
+      const st = this.store.load(this.userId);
+      for (const t of SYNC_TABLES) {
+        Object.assign(st.base[t], plan.deferred.set[t]);
+        for (const id of plan.deferred.del[t]) delete st.base[t][id];
+      }
+      this.store.save(this.userId, st);
+    };
+  }
+
+  private fail(data: AppData, state: SyncState, report: SyncReport, e: unknown, commit: () => void = () => undefined): SyncResult {
     const error = e instanceof Error ? e : new Error(String(e));
-    return { ok: false, data, report, state, error, retryable: error instanceof RemoteError ? error.retryable : false };
+    return { ok: false, data, report, state, error, retryable: error instanceof RemoteError ? error.retryable : false, commit };
   }
 }
 

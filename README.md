@@ -4,6 +4,7 @@ Um app pessoal para tirar as coisas da cabeça e ver, com clareza, **o que merec
 Feito para cabeça com TDAH: captura sem fricção, poucas decisões por tela, adiar sem culpa.
 
 > MVP local. Dados de exemplo são fictícios. Nenhuma conta, banco, agenda ou mensageiro está conectado.
+> Supabase, IA e agente (Hermes) têm código pronto e **desligado**: sem variáveis de ambiente o app é 100% local.
 
 ## Rodar
 
@@ -22,7 +23,7 @@ Antes de qualquer ação que apaga ou substitui dados, o app guarda um backup au
 | `npm run build && npm start` | build de produção (PWA + service worker ativos) |
 | `npm run lint` | ESLint |
 | `npm run typecheck` | TypeScript |
-| `npm test` | testes unitários (Vitest) — parser, seletores, planejador, ferramentas, migração |
+| `npm test` | testes unitários (Vitest) — parser, seletores, planejador, ferramentas, sync, gateway, schema/RLS em Postgres em memória |
 | `npm run e2e` | testes ponta a ponta (Playwright, iPhone + desktop) — rode `npm run build` antes |
 
 No iPhone: abra no Safari → Compartilhar → **Adicionar à Tela de Início**.
