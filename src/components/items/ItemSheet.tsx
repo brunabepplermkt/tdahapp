@@ -133,7 +133,7 @@ function ItemDetail({ item, today, onClose }: { item: Item; today: ISODate; onCl
             }
           }}
           aria-label="Título"
-          className="field-sizing-content min-h-9 w-full resize-none bg-transparent text-[22px] leading-tight font-semibold tracking-[-0.015em] text-ink focus:outline-none"
+          className="field-sizing-content min-h-9 w-full resize-none bg-transparent font-display text-[30px] leading-[1.15] font-light tracking-[-0.025em] text-ink focus:outline-none"
         />
       </div>
 
