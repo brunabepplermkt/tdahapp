@@ -6,6 +6,7 @@ import { useApp } from "@/lib/hooks/useApp";
 import { listInterpreters } from "@/lib/intelligence";
 import { toolManifest } from "@/lib/tools";
 import { repository, type BackupInfo } from "@/lib/store/repository";
+import { accountModeEnabled } from "@/lib/sync/config";
 import { useStore } from "@/lib/store/store";
 import { CloudSection } from "@/components/account/CloudSection";
 import { Ready } from "@/components/shell/AppShell";
@@ -60,6 +61,7 @@ function More() {
   const decisions = pendingDecisions(data.decisions, today, data.items).length;
   const someday = data.items.filter((i) => i.status === "someday").length;
   const tools = toolManifest();
+  const account = accountModeEnabled();
 
   const exportJson = () => {
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
@@ -108,6 +110,8 @@ function More() {
         </Group>
       </Section>
 
+      {account && <CloudSection />}
+
       <Collapsible title="Avançado">
         <Group className="mb-6">
           <LinkRow href="/atividade" icon={<IconActivity size={20} />}>
@@ -119,9 +123,11 @@ function More() {
             <Button size="sm" onClick={exportJson}>
               Exportar backup (JSON)
             </Button>
-            <Button size="sm" onClick={() => void resetDemo().then(refreshBackups)}>
-              Recriar dados de exemplo
-            </Button>
+            {!account && (
+              <Button size="sm" onClick={() => void resetDemo().then(refreshBackups)}>
+                Recriar dados de exemplo
+              </Button>
+            )}
             {!confirmClear ? (
               <Button size="sm" variant="danger" onClick={() => setConfirmClear(true)}>
                 Começar do zero
@@ -171,7 +177,7 @@ function More() {
           )}
         </Section>
 
-        <CloudSection />
+        {!account && <CloudSection />}
 
         <Collapsible title="Integrações" count={INTEGRATIONS.length}>
           <Group>

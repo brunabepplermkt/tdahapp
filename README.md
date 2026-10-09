@@ -3,7 +3,7 @@
 Um app pessoal para tirar as coisas da cabeça e ver, com clareza, **o que merece atenção agora**.
 Feito para cabeça com TDAH: captura sem fricção, poucas decisões por tela, adiar sem culpa.
 
-> MVP local. Dados de exemplo são fictícios. Nenhuma conta, banco, agenda ou mensageiro está conectado.
+> Sem configuração o app é 100% local (sem login). Com Supabase configurado ele vira multi-conta: ver [docs/CONTAS.md](docs/CONTAS.md). Dados de exemplo são fictícios. Nenhuma conta, banco, agenda ou mensageiro está conectado.
 > Supabase, IA e agente (Hermes) têm código pronto e **desligado**: sem variáveis de ambiente o app é 100% local.
 
 ## Rodar
@@ -51,6 +51,9 @@ No iPhone: abra no Safari → Compartilhar → **Adicionar à Tela de Início**.
 - **Lembretes** (`/lembretes`) — configuráveis: quais, em que horário, silêncio, máximo por dia, antecedência de
   compromissos. Usam notificações do navegador/PWA (ou um aviso dentro do app, sem permissão). **Não há servidor de
   push**: com o app totalmente fechado nada chega. Preferências ficam só no aparelho (`leve:prefs:v1`), fora da sincronização.
+- **Ditado** — botão de microfone na captura e no despejo (pt-BR). Dá para falar “nova linha”, “vírgula”, “ponto final”.
+  Se o navegador não ditar, use o microfone do teclado do iPhone.
+- **Contas** — login por e-mail e senha, cada pessoa com os seus dados (modo conta, ver `docs/CONTAS.md`).
 - **Busca global** (lupa no Hoje ou tecla `/`) — itens, projetos, notas e capturas, sem se preocupar com acentos.
 - **Gestos** — deslizar para a direita conclui, para a esquerda adia para amanhã.
 

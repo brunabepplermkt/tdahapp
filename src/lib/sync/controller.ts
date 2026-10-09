@@ -4,29 +4,48 @@
  * Controlador de conta + sincronização (cliente).
  *
  * Sem variáveis do Supabase → status "unconfigured" e NADA acontece: o app
- * segue 100% local. Com configuração, o fluxo é sempre explícito:
- *   entrar (link por e-mail) → enviar dados deste aparelho (backup antes) → sincronizar.
+ * segue 100% local. Com configuração (modo conta):
+ *   entrar (e-mail + senha) → dados locais separados por pessoa → envio/sincronização automáticos.
  * O estado local é salvo primeiro; a rede é melhor esforço e se recupera sozinha.
  */
 import { create } from "zustand";
 import type { AppData } from "@/lib/domain/types";
 import { readSupabaseConfig } from "./config";
 import { SyncEngine, type SyncReport, type SyncResult } from "./engine";
-import { checkOwner, claimOwner } from "./owner";
+import { authErrorMessage, checkCredentials } from "./auth-errors";
 import { rebaseData } from "./rebase";
-import { LocalStorageSyncState } from "./state";
+import { emptyState, LocalStorageSyncState } from "./state";
 
-export type SyncStatus = "unconfigured" | "loading" | "signed_out" | "link_sent" | "ready" | "syncing" | "offline" | "error";
+export type SyncStatus =
+  | "unconfigured"
+  | "loading"
+  | "signed_out"
+  /** conta criada; falta confirmar o e-mail */
+  | "confirm_email"
+  | "ready"
+  | "syncing"
+  | "offline"
+  | "error";
 
 interface Hooks {
   getData(): AppData;
   /** aplica dados vindos do remoto: atualiza a store e salva localmente */
   setData(data: AppData): void;
   backup(reason: string): Promise<void>;
+  /** troca o espaço local para a pessoa (ou tranca, com `null`) */
+  switchUser(userId: string | null): Promise<{ fresh: boolean }>;
 }
 
 interface SyncStore {
   status: SyncStatus;
+  /** há uma pessoa autenticada neste aparelho */
+  signedIn: boolean;
+  /** abriu o link de “esqueci a senha”: precisa definir a nova antes de usar o app */
+  recovery: boolean;
+  /** uma chamada de login/cadastro em andamento */
+  busy: boolean;
+  /** aviso positivo (ex.: “enviei um e-mail”) */
+  notice: string | null;
   email: string | null;
   migrated: boolean;
   lastSyncAt: string | null;
@@ -34,7 +53,10 @@ interface SyncStore {
   heldDeletions: number;
   lastReport: SyncReport | null;
   init(): Promise<void>;
-  signIn(email: string): Promise<void>;
+  signUp(email: string, password: string): Promise<void>;
+  signIn(email: string, password: string): Promise<void>;
+  resetPassword(email: string): Promise<void>;
+  updatePassword(password: string): Promise<void>;
   signOut(): Promise<void>;
   migrate(): Promise<void>;
   syncNow(opts?: { allowMassDelete?: boolean }): Promise<void>;
@@ -53,6 +75,7 @@ let client: import("@supabase/supabase-js").SupabaseClient | null = null;
 let timer: ReturnType<typeof setTimeout> | null = null;
 let chain: Promise<unknown> = Promise.resolve();
 let listenersAttached = false;
+let initStarted = false;
 
 export const useSync = create<SyncStore>((set, get) => {
   const apply = (r: SyncResult, snapshot: AppData) => {
@@ -62,12 +85,18 @@ export const useSync = create<SyncStore>((set, get) => {
     const st = engine?.state() ?? r.state;
     if (r.ok) {
       set({
-        status: "ready", lastSyncAt: st.lastSyncAt ?? null, migrated: !!st.migratedAt, lastError: null,
-        heldDeletions: r.report.heldDeletions, lastReport: r.report,
+        status: "ready",
+        lastSyncAt: st.lastSyncAt ?? null,
+        migrated: !!st.migratedAt,
+        lastError: null,
+        heldDeletions: r.report.heldDeletions,
+        lastReport: r.report,
       });
     } else {
       set({
-        status: r.retryable ? "offline" : "error", lastError: r.error.message, lastReport: r.report,
+        status: r.retryable ? "offline" : "error",
+        lastError: r.error.message,
+        lastReport: r.report,
         migrated: !!st.migratedAt,
       });
     }
@@ -94,40 +123,55 @@ export const useSync = create<SyncStore>((set, get) => {
     timer = null;
     if (!engine || !hooks || !get().migrated) return;
     void enqueue(async () => {
+      const eng = engine!;
       const snapshot = hooks!.getData();
       set({ status: "syncing" });
-      apply(await engine!.push(snapshot), snapshot);
+      const result = await eng.push(snapshot);
+      if (eng !== engine) return; // a pessoa trocou/saiu no meio: o resultado é de outra conta
+      apply(result, snapshot);
     });
   };
 
   const adoptSession = async (session: { user: { id: string; email?: string | null } } | null) => {
+    if (timer) clearTimeout(timer); // nada agendado de uma conta anterior
+    timer = null;
     if (!session || !client) {
       engine = null;
       userId = null;
-      set({ status: "signed_out", email: null, migrated: false });
+      await hooks?.switchUser(null);
+      set({ status: "signed_out", signedIn: false, recovery: false, email: null, migrated: false, lastSyncAt: null });
       return;
     }
     const { SupabaseRemote } = await import("./supabase");
     userId = session.user.id;
-    if (checkOwner(userId) === "other") {
-      // outra conta já usou estes dados locais: não misturar
-      engine = null;
-      set({
-        status: "error", email: session.user.email ?? null, migrated: false,
-        lastError:
-          "Os dados deste aparelho pertencem a outra conta. Saia, exporte um backup e use “Começar do zero” antes de entrar com esta conta.",
-      });
-      return;
-    }
+    // cada pessoa tem o seu espaço local: nada se mistura entre contas no mesmo aparelho
+    const { fresh } = (await hooks?.switchUser(userId)) ?? { fresh: false };
+    // sem dados locais desta pessoa, o histórico de sincronização não vale: se valesse, “nada aqui”
+    // seria lido como “apaguei tudo” e a nuvem seria esvaziada. Recomeça só trazendo (nunca apaga).
+    if (fresh) stateStore.save(userId, emptyState());
     engine = new SyncEngine(new SupabaseRemote(client, userId), stateStore);
     const st = engine.state();
-    set({ status: "ready", email: session.user.email ?? null, migrated: !!st.migratedAt, lastSyncAt: st.lastSyncAt ?? null });
+    set({
+      status: "ready",
+      signedIn: true,
+      email: session.user.email ?? null,
+      migrated: !!st.migratedAt,
+      lastSyncAt: st.lastSyncAt ?? null,
+      lastError: null,
+      notice: null,
+    });
     attachListeners();
+    // primeira vez nesta conta/aparelho: reconcilia sem apagar nada (traz o que já está na nuvem)
     if (st.migratedAt) void get().syncNow();
+    else void get().migrate();
   };
 
   return {
     status: "unconfigured",
+    signedIn: false,
+    recovery: false,
+    busy: false,
+    notice: null,
     email: null,
     migrated: false,
     lastSyncAt: null,
@@ -138,54 +182,112 @@ export const useSync = create<SyncStore>((set, get) => {
     async init() {
       const cfg = readSupabaseConfig();
       if (!cfg) return set({ status: "unconfigured" });
-      if (client) return;
+      if (initStarted) return;
+      initStarted = true;
       set({ status: "loading" });
       try {
         const { createSupabaseClient } = await import("./supabase");
         client = await createSupabaseClient(cfg);
         const { data } = await client.auth.getSession();
-        client.auth.onAuthStateChange((_event, session) => void adoptSession(session));
+        client.auth.onAuthStateChange((event, session) => {
+          if (event === "PASSWORD_RECOVERY") {
+            set({ recovery: true });
+            void adoptSession(session);
+          } else if (event === "SIGNED_OUT" || event === "SIGNED_IN") {
+            void adoptSession(session);
+          }
+        });
         await adoptSession(data.session);
       } catch (e) {
-        set({ status: "error", lastError: (e as Error).message });
+        initStarted = false;
+        set({ status: "error", signedIn: false, lastError: authErrorMessage(e) });
       }
     },
 
-    async signIn(email) {
+    async signUp(email, password) {
       if (!client) return;
-      const { error } = await client.auth.signInWithOtp({
+      const check = checkCredentials(email, password);
+      if (!check.ok) return set({ lastError: check.error ?? null, notice: null });
+      set({ busy: true, lastError: null, notice: null });
+      const { data, error } = await client.auth.signUp({
         email: email.trim(),
-        options: { emailRedirectTo: window.location.origin, shouldCreateUser: true },
+        password,
+        options: { emailRedirectTo: window.location.origin },
       });
-      if (error) set({ status: "error", lastError: error.message });
-      else set({ status: "link_sent", email: email.trim(), lastError: null });
+      if (error) return set({ busy: false, lastError: authErrorMessage(error) });
+      // e-mail já cadastrado: o Supabase não acusa erro (para não revelar contas), mas não traz identidades
+      if (data.user && (data.user.identities?.length ?? 1) === 0) {
+        return set({ busy: false, lastError: authErrorMessage({ code: "user_already_exists" }) });
+      }
+      if (!data.session) {
+        return set({
+          busy: false,
+          status: "confirm_email",
+          notice: "Enviei um e-mail para confirmar. Abra o link e volte aqui para entrar.",
+        });
+      }
+      set({ busy: false }); // com sessão, o evento SIGNED_IN assume
+    },
+
+    async signIn(email, password) {
+      if (!client) return;
+      const check = checkCredentials(email, password);
+      if (!check.ok) return set({ lastError: check.error ?? null, notice: null });
+      set({ busy: true, lastError: null, notice: null });
+      const { error } = await client.auth.signInWithPassword({ email: email.trim(), password });
+      set({ busy: false, ...(error ? { lastError: authErrorMessage(error) } : {}) });
+    },
+
+    async resetPassword(email) {
+      if (!client) return;
+      const check = checkCredentials(email, "", { needPassword: false });
+      if (!check.ok) return set({ lastError: check.error ?? null, notice: null });
+      set({ busy: true, lastError: null, notice: null });
+      const { error } = await client.auth.resetPasswordForEmail(email.trim(), { redirectTo: window.location.origin });
+      if (error) return set({ busy: false, lastError: authErrorMessage(error) });
+      // mesma resposta exista a conta ou não
+      set({ busy: false, notice: "Se esse e-mail tiver conta, enviei um link para criar a nova senha." });
+    },
+
+    async updatePassword(password) {
+      if (!client) return;
+      const check = checkCredentials("x@x.xx", password);
+      if (!check.ok) return set({ lastError: check.error ?? null });
+      set({ busy: true, lastError: null });
+      const { error } = await client.auth.updateUser({ password });
+      if (error) return set({ busy: false, lastError: authErrorMessage(error) });
+      set({ busy: false, recovery: false, notice: "Senha trocada." });
     },
 
     async signOut() {
-      // os dados locais ficam; só a conexão com a nuvem é encerrada
       await client?.auth.signOut();
-      engine = null;
-      userId = null;
-      set({ status: "signed_out", email: null, migrated: false, lastSyncAt: null });
+      await adoptSession(null);
     },
 
     async migrate() {
       if (!engine || !hooks) return;
+      const eng = engine;
       await enqueue(async () => {
+        if (eng !== engine) return;
         const snapshot = hooks!.getData();
         set({ status: "syncing", lastError: null });
         await hooks!.backup("antes de enviar para a nuvem");
-        claimOwner(userId!);
-        apply(await engine!.reconcile(snapshot, { migrate: true }), snapshot);
+        const result = await eng.reconcile(snapshot, { migrate: true });
+        if (eng !== engine) return;
+        apply(result, snapshot);
       });
     },
 
     async syncNow(opts) {
       if (!engine || !hooks || !get().migrated) return;
+      const eng = engine;
       await enqueue(async () => {
+        if (eng !== engine) return;
         const snapshot = hooks!.getData();
         set({ status: "syncing" });
-        apply(await engine!.reconcile(snapshot, { allowMassDelete: opts?.allowMassDelete }), snapshot);
+        const result = await eng.reconcile(snapshot, { allowMassDelete: opts?.allowMassDelete });
+        if (eng !== engine) return;
+        apply(result, snapshot);
       });
     },
 

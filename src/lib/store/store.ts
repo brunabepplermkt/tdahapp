@@ -14,6 +14,7 @@ import { buildDemoData, emptyData } from "@/lib/demo/demo-data";
 import { getInterpreter, runAgentRules } from "@/lib/intelligence";
 import { executeTool, runDecisionActions } from "@/lib/tools";
 import type { PlanMove } from "@/lib/intelligence";
+import { accountModeEnabled } from "@/lib/sync/config";
 import { bindSyncHooks, useSync } from "@/lib/sync/controller";
 import { repository } from "./repository";
 
@@ -27,8 +28,14 @@ interface StoreState {
   data: AppData;
   hydrated: boolean;
   toast: Toast | null;
+  /** primeira conta neste aparelho que ainda não decidiu o que fazer com os dados do modo local antigo */
+  legacyPending: boolean;
 
   hydrate(): Promise<void>;
+  /** modo conta: entra o espaço local de uma pessoa (ou tranca, com `null`) */
+  switchUser(userId: string | null): Promise<{ fresh: boolean }>;
+  /** traz os dados salvos antes de existirem contas para a conta atual */
+  resolveLegacy(bring: boolean): void;
   /** aplica uma transformação pura e persiste */
   apply(fn: (d: AppData) => AppData, toast?: string, undoable?: boolean): void;
   showToast(message: string, undo?: AppData): void;
@@ -52,6 +59,15 @@ interface StoreState {
 }
 
 let toastSeq = 0;
+let hydrating = false;
+const LEGACY_RESOLVED = "tdahapp:legacy:resolved";
+const legacyResolved = () => {
+  try {
+    return window.localStorage.getItem(LEGACY_RESOLVED) === "1";
+  } catch {
+    return true;
+  }
+};
 /** grava o estado atual e guarda uma cópia de segurança */
 async function snapshot(reason: string, data: AppData) {
   await repository.save(data);
@@ -71,9 +87,46 @@ export const useStore = create<StoreState>((set, get) => ({
   data: emptyData(),
   hydrated: false,
   toast: null,
+  legacyPending: false,
+
+  async switchUser(userId) {
+    repository.setUser(userId);
+    if (!userId) {
+      set({ data: emptyData(), hydrated: false, toast: null, legacyPending: false });
+      return { fresh: false };
+    }
+    let data = await repository.load();
+    const loaded = !!data;
+    let legacyPending = false;
+    if (!data) {
+      // conta nova neste aparelho: começa vazia (sem dados de exemplo)
+      data = emptyData();
+      legacyPending = !legacyResolved() && repository.loadLegacy() !== null;
+    }
+    set({ data, hydrated: true, toast: null, legacyPending });
+    return { fresh: !loaded };
+  },
+
+  resolveLegacy(bring) {
+    try {
+      window.localStorage.setItem(LEGACY_RESOLVED, "1");
+    } catch {
+      /* sem armazenamento: a pergunta pode voltar */
+    }
+    const legacy = bring ? repository.loadLegacy() : null;
+    set({ legacyPending: false });
+    if (legacy) get().apply(() => legacy, "Dados trazidos para a sua conta.", false);
+  },
 
   async hydrate() {
-    if (get().hydrated) return;
+    if (get().hydrated || hydrating) return;
+    hydrating = true;
+    if (accountModeEnabled()) {
+      // com conta: nada é carregado até saber quem entrou (ver switchUser)
+      repository.setUser(null);
+      void useSync.getState().init();
+      return;
+    }
     const today = todayISO();
     let data = await repository.load();
     if (!data) {
@@ -166,8 +219,11 @@ export const useStore = create<StoreState>((set, get) => ({
         : "Feito. Um a menos.";
       get().apply(
         (d) =>
-          executeTool(d, { tool: item.money ? "mark_paid" : "complete_item", input: { itemId: id } }, { origin: "user_app" })
-            .data,
+          executeTool(
+            d,
+            { tool: item.money ? "mark_paid" : "complete_item", input: { itemId: id } },
+            { origin: "user_app" },
+          ).data,
         msg,
       );
     }
@@ -260,4 +316,5 @@ bindSyncHooks({
     void repository.save(data);
   },
   backup: (reason) => repository.backup(reason),
+  switchUser: (userId) => useStore.getState().switchUser(userId),
 });

@@ -42,3 +42,8 @@ export function readSupabaseConfig(
   }
   return { url, anonKey };
 }
+
+/** Modo conta: com Supabase configurado, o app exige login e separa os dados por pessoa. */
+export function accountModeEnabled(): boolean {
+  return readSupabaseConfig() !== null;
+}

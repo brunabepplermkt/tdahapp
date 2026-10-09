@@ -5,6 +5,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense, useEffect, type ReactNode } from "react";
 import { inboxCaptures, pendingDecisions } from "@/lib/domain/selectors";
+import { accountModeEnabled } from "@/lib/sync/config";
+import { useSync } from "@/lib/sync/controller";
+import { AuthScreen } from "@/components/account/AuthScreen";
+import { LegacyChoice } from "@/components/account/LegacyChoice";
 import { useApp } from "@/lib/hooks/useApp";
 import { useTodayTicker } from "@/lib/hooks/useToday";
 import { useStore } from "@/lib/store/store";
@@ -76,6 +80,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   const openSearch = useUI((s) => s.openSearch);
   const fabHidden = useUI((s) => s.fabHidden);
   const { data, today, ready } = useApp();
+  const account = accountModeEnabled();
+  const signedIn = useSync((s) => s.signedIn);
+  const recovery = useSync((s) => s.recovery);
+  const legacyPending = useStore((s) => s.legacyPending);
   useTodayTicker();
 
   useEffect(() => {
@@ -110,6 +118,10 @@ export function AppShell({ children }: { children: ReactNode }) {
     inbox: ready ? inboxCaptures(data.captures, today).length : 0,
     decisions: ready ? pendingDecisions(data.decisions, today, data.items).length : 0,
   };
+
+  // modo conta: sem pessoa autenticada, só a tela de entrada
+  if (account && (!signedIn || recovery)) return <AuthScreen />;
+  if (account && legacyPending) return <LegacyChoice />;
 
   return (
     <div className="min-h-dvh lg:flex">

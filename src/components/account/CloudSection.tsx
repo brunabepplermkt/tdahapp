@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { useStore } from "@/lib/store/store";
 import { useSync } from "@/lib/sync/controller";
-import { Button, Group, inputClass, Section } from "@/components/ui/primitives";
+import { Button, Group, Section } from "@/components/ui/primitives";
 
 const when = (iso: string | null) =>
-  iso ? new Date(iso).toLocaleString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "—";
+  iso
+    ? new Date(iso).toLocaleString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })
+    : "—";
 
 /**
  * Conta e nuvem. Sem Supabase configurado, mostra só “modo local” — o app
@@ -14,8 +14,6 @@ const when = (iso: string | null) =>
  */
 export function CloudSection() {
   const s = useSync();
-  const data = useStore((st) => st.data);
-  const [email, setEmail] = useState("");
 
   if (s.status === "unconfigured" || s.status === "loading") {
     return (
@@ -23,71 +21,27 @@ export function CloudSection() {
         <Group>
           <div className="flex items-center justify-between gap-3 px-4 py-3" data-testid="cloud-status">
             <span className="text-[14px] text-ink">Sincronização</span>
-            <span className="shrink-0 text-[12px] text-muted">
-              {s.status === "loading" ? "…" : "Desligada"}
-            </span>
+            <span className="shrink-0 text-[12px] text-muted">{s.status === "loading" ? "…" : "Desligada"}</span>
           </div>
         </Group>
       </Section>
     );
   }
 
-  const count = data.items.length + data.projects.length + data.captures.length + data.notes.length + data.decisions.length;
-
   return (
-    <Section title="Conta e nuvem" >
+    <Section title="Conta e nuvem">
       <Group>
         <div className="px-4 py-3" data-testid="cloud-status">
-          <p className="text-[14px] text-ink">
-            {s.status === "signed_out" && "Sem conta conectada"}
-            {s.status === "link_sent" && "Link enviado. Abra o e-mail."}
+          <p className="text-[15px] text-ink">{s.email ?? "Sem conta conectada"}</p>
+          <p className="mt-0.5 text-[13px] text-muted">
             {s.status === "syncing" && "Sincronizando…"}
-            {s.status === "offline" && "Offline — salvo aqui"}
-            {s.status === "error" && "Falhou — dados locais intactos"}
-            {s.status === "ready" && (s.migrated ? "Sincronizado" : `Conectado como ${s.email ?? "você"}`)}
+            {s.status === "offline" && "Offline — salvo aqui, sobe quando a internet voltar"}
+            {s.status === "error" && "Falhou — seus dados locais estão intactos"}
+            {s.status === "ready" && (s.migrated ? `Sincronizado · ${when(s.lastSyncAt)}` : "Conectando…")}
           </p>
           {s.lastError && <p className="mt-1 text-[12px] text-danger">{s.lastError}</p>}
-          {s.migrated && <p className="mt-1 text-[12px] text-muted">Última sincronização: {when(s.lastSyncAt)}</p>}
         </div>
       </Group>
-
-      {(s.status === "signed_out" || s.status === "link_sent" || (s.status === "error" && !s.email)) && (
-        <form
-          className="mt-3 flex gap-2"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (email.includes("@")) void s.signIn(email);
-          }}
-        >
-          <input
-            className={inputClass}
-            type="email"
-            inputMode="email"
-            autoComplete="email"
-            placeholder="seu@email.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            aria-label="E-mail para receber o link de acesso"
-          />
-          <Button type="submit" size="sm" variant="primary" className="shrink-0 whitespace-nowrap">
-            Enviar link
-          </Button>
-        </form>
-      )}
-
-      {s.email && !s.migrated && s.status !== "syncing" && (
-        <div className="mt-3 rounded-[16px] bg-surface p-4 shadow-soft">
-          <p className="text-[14px] text-ink">
-            Enviar os {count} registros deste aparelho para a nuvem?
-          </p>
-          <p className="mt-1 text-[12px] text-muted">
-            Guardo um backup antes. Nada é apagado aqui nem lá, e repetir é seguro (não duplica).
-          </p>
-          <Button className="mt-3" size="sm" variant="primary" onClick={() => void s.migrate()}>
-            Enviar dados deste aparelho
-          </Button>
-        </div>
-      )}
 
       {s.migrated && s.heldDeletions > 0 && (
         <div className="mt-3 rounded-[16px] bg-surface p-4 shadow-soft">
@@ -101,18 +55,16 @@ export function CloudSection() {
         </div>
       )}
 
-      {s.email && (
-        <div className="mt-3 flex flex-wrap gap-2">
-          {s.migrated && (
-            <Button size="sm" onClick={() => void s.syncNow()}>
-              Sincronizar agora
-            </Button>
-          )}
-          <Button size="sm" onClick={() => void s.signOut()}>
-            Sair (dados locais ficam)
+      <div className="mt-3 flex flex-wrap gap-2">
+        {s.migrated && (
+          <Button size="sm" onClick={() => void s.syncNow()}>
+            Sincronizar agora
           </Button>
-        </div>
-      )}
+        )}
+        <Button size="sm" onClick={() => void s.signOut()}>
+          Sair da conta
+        </Button>
+      </div>
     </Section>
   );
 }
