@@ -17,6 +17,13 @@ Estado: **pronto localmente, nada publicado.** Sem Supabase, IA, Hermes, WhatsAp
 5. Ativar modo avião e reabrir → o app abre offline.
 6. Mais → “Conta e nuvem” mostra **Desligada**.
 
+## Instalar no iPhone (vira um app na tela de início)
+1. Abrir a URL **no Safari** (não no Chrome do iPhone).
+2. Compartilhar → **Adicionar à Tela de Início** → Adicionar.
+3. Abrir pelo ícone “Leve”: abre em tela cheia, sem barra do navegador, e funciona offline.
+4. Lembretes: em **Mais → Lembretes**, ligar e permitir notificações. No iOS isso só funciona **com o app instalado
+   pela tela de início** (iOS 16.4 ou mais novo), e só com o app aberto ou em segundo plano (ainda não há servidor de push).
+
 ## Importante
 - Os dados ficam só no navegador do aparelho: limpar dados do Safari apaga tudo → use **Exportar backup**.
 - Ligar Supabase/IA/Hermes são etapas separadas, cada uma com credenciais e aprovação: ver `docs/PROXIMA-FASE.md`.
