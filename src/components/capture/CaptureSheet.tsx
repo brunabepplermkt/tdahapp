@@ -7,6 +7,8 @@ import { useStore } from "@/lib/store/store";
 import { useUI } from "@/lib/store/ui";
 import { Button } from "@/components/ui/primitives";
 import { Sheet } from "@/components/ui/Sheet";
+import { appendDictation } from "@/lib/voice/commands";
+import { Dictation } from "./Dictation";
 import { DraftChips } from "./DraftView";
 
 /**
@@ -69,6 +71,8 @@ function CaptureForm({ onDone }: { onDone: () => void }) {
         enterKeyHint="done"
         autoCapitalize="sentences"
       />
+
+      <Dictation className="mt-3" onText={(chunk) => setText((t) => appendDictation(t, chunk))} />
 
       <div className="min-h-[92px] px-2 pt-4">
         {preview ? (

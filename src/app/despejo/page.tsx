@@ -5,6 +5,8 @@ import { useMemo, useRef, useState } from "react";
 import { addCapture, acceptCapture, draftToItemInput, addItem, moveToSomeday } from "@/lib/domain/operations";
 import { BUCKET_LABEL, BUCKET_ORDER, sortDump, type DumpBucket, type DumpEntry } from "@/lib/intelligence/braindump";
 import type { ItemDraft } from "@/lib/domain/types";
+import { Dictation } from "@/components/capture/Dictation";
+import { appendDictation } from "@/lib/voice/commands";
 import { useApp } from "@/lib/hooks/useApp";
 import { useStore } from "@/lib/store/store";
 import { Ready } from "@/components/shell/AppShell";
@@ -83,6 +85,7 @@ function Dump() {
             placeholder={"Uma coisa por linha, sem ordem.\nTarefas, ideias, medos, contas…"}
             className="min-h-64 w-full resize-none rounded-[28px] bg-surface px-6 py-5 font-display text-[22px] leading-[1.35] font-light tracking-[-0.02em] text-ink shadow-soft ring-1 ring-black/[0.04] placeholder:text-faint focus:ring-2 focus:ring-accent/30 focus:outline-none focus-ring-own"
           />
+          <Dictation className="mt-4" onText={(chunk) => setText((t) => appendDictation(t, chunk))} />
           <div className="mt-4">
             <Button variant="primary" size="lg" block disabled={!text.trim()} onClick={sort}>
               Separar pra mim

@@ -157,3 +157,9 @@ export const IconSearch = (p: IconProps) => (
     <path d="m20 20-4.2-4.2" />
   </Base>
 );
+export const IconMic = (p: IconProps) => (
+  <Base {...p}>
+    <rect x="9" y="3" width="6" height="11" rx="3" />
+    <path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
+  </Base>
+);

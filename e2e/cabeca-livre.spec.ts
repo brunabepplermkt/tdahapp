@@ -55,3 +55,44 @@ test("micropassos: sugerir mostra tempo e o primeiro passo é minúsculo", async
   await page.getByRole("button", { name: "Só o primeiro" }).click();
   await expect(page.getByRole("dialog").getByText(/Só abrir/)).toBeVisible();
 });
+
+test("ditado: fala vira texto na captura e no despejo (reconhecimento simulado)", async ({ page }) => {
+  await page.addInitScript(() => {
+    class FakeRec {
+      lang = "";
+      continuous = false;
+      interimResults = false;
+      onresult: ((e: unknown) => void) | null = null;
+      onend: (() => void) | null = null;
+      onerror: ((e: { error: string }) => void) | null = null;
+      start() {
+        setTimeout(() => {
+          const mk = (t: string, isFinal: boolean) => ({ isFinal, 0: { transcript: t } });
+          this.onresult?.({ resultIndex: 0, results: [mk("ligar pro dentista nova linha pagar a luz", true)] });
+        }, 50);
+      }
+      stop() {
+        this.onend?.();
+      }
+    }
+    Object.assign(window, { SpeechRecognition: FakeRec, webkitSpeechRecognition: FakeRec });
+  });
+  await open(page);
+  await page.getByRole("button", { name: /Joga aqui/ }).click();
+  await page.getByRole("button", { name: "Ditar", exact: true }).click();
+  await expect(page.getByPlaceholder(/do jeito que vier/)).toHaveValue("ligar pro dentista\npagar a luz");
+  await page.keyboard.press("Escape");
+
+  await page.goto("/despejo");
+  await page.getByRole("button", { name: "Ditar", exact: true }).click();
+  await expect(page.getByPlaceholder(/Uma coisa por linha/)).toHaveValue("ligar pro dentista\npagar a luz");
+});
+
+test("ditado sem suporte do navegador explica o que fazer", async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.assign(window, { SpeechRecognition: undefined, webkitSpeechRecognition: undefined });
+  });
+  await open(page, "/despejo");
+  await page.getByRole("button", { name: "Ditar", exact: true }).click();
+  await expect(page.getByTestId("dictation-status")).toContainText(/microfone do teclado/);
+});
