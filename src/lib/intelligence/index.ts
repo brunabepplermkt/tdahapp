@@ -28,7 +28,8 @@ export function listInterpreters(): CaptureInterpreter[] {
 /** Versão síncrona (o heurístico é síncrono) para preview enquanto digita. */
 export const interpretNow = interpretText;
 
-export { suggestSteps } from "./breakdown";
+export { suggestMicroSteps, suggestSteps, totalMinutes, type MicroStep } from "./breakdown";
+export { sortDump, type DumpBucket, type DumpEntry } from "./braindump";
 export { proposeMonthPlan, proposeWeekPlan, type PlanMove, type PlanProposal } from "./planner";
 export { runAgentRules } from "./rules";
 export { createStructuredInterpreter, type StructuredProvider } from "./pipeline";

@@ -59,3 +59,19 @@ self.addEventListener("fetch", (event) => {
     );
   }
 });
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const href = (event.notification.data && event.notification.data.href) || "/";
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
+      for (const c of list) {
+        if ("focus" in c) {
+          c.navigate(href).catch(() => undefined);
+          return c.focus();
+        }
+      }
+      return self.clients.openWindow(href);
+    }),
+  );
+});

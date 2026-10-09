@@ -9,7 +9,17 @@ import { repository, type BackupInfo } from "@/lib/store/repository";
 import { useStore } from "@/lib/store/store";
 import { CloudSection } from "@/components/account/CloudSection";
 import { Ready } from "@/components/shell/AppShell";
-import { IconActivity, IconDecision, IconFolder, IconLeaf, IconWallet, IconWeek } from "@/components/ui/icons";
+import {
+  IconActivity,
+  IconClock,
+  IconDecision,
+  IconFolder,
+  IconLeaf,
+  IconRepeat,
+  IconSparkle,
+  IconWallet,
+  IconWeek,
+} from "@/components/ui/icons";
 import { Button, Collapsible, Group, LinkRow, PageHeader, Section } from "@/components/ui/primitives";
 
 export default function MorePage() {
@@ -67,6 +77,15 @@ function More() {
 
       <Section>
         <Group>
+          <LinkRow href="/rotina" icon={<IconRepeat size={20} />}>
+            Rotina
+          </LinkRow>
+          <LinkRow href="/despejo" icon={<IconSparkle size={20} />}>
+            Despejar a cabeça
+          </LinkRow>
+          <LinkRow href="/lembretes" icon={<IconClock size={20} />}>
+            Lembretes
+          </LinkRow>
           <LinkRow
             href="/decisoes"
             icon={<IconDecision size={20} />}
@@ -86,112 +105,116 @@ function More() {
           <LinkRow href="/revisao" icon={<IconWeek size={20} />}>
             Revisão semanal
           </LinkRow>
+        </Group>
+      </Section>
+
+      <Collapsible title="Avançado">
+        <Group className="mb-6">
           <LinkRow href="/atividade" icon={<IconActivity size={20} />}>
             Atividade
           </LinkRow>
         </Group>
-      </Section>
-
-      <Section title="Seus dados">
-        <div className="flex flex-wrap gap-2">
-          <Button size="sm" onClick={exportJson}>
-            Exportar backup (JSON)
-          </Button>
-          <Button size="sm" onClick={() => void resetDemo().then(refreshBackups)}>
-            Recriar dados de exemplo
-          </Button>
-          {!confirmClear ? (
-            <Button size="sm" variant="danger" onClick={() => setConfirmClear(true)}>
-              Começar do zero
+        <Section title="Seus dados">
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" onClick={exportJson}>
+              Exportar backup (JSON)
             </Button>
-          ) : (
-            <Button
-              size="sm"
-              variant="danger"
-              onClick={() => {
-                void clearAll().then(refreshBackups);
-                setConfirmClear(false);
-              }}
-            >
-              Confirmar: apagar tudo
+            <Button size="sm" onClick={() => void resetDemo().then(refreshBackups)}>
+              Recriar dados de exemplo
             </Button>
-          )}
-        </div>
-        {backups.length > 0 && (
-          <div className="mt-4">
-            <Collapsible title="Backups automáticos" count={backups.length}>
-              <p className="mb-2 px-1 text-[13px] text-muted">
-                Guardados antes de qualquer ação que apaga ou substitui dados. Ficam os 5 mais recentes.
-              </p>
-              <Group>
-                {backups.map((b) => (
-                  <div key={b.key} className="flex items-center gap-3 px-4 py-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[14px] text-ink">
-                        {new Date(b.at).toLocaleString("pt-BR", {
-                          day: "2-digit",
-                          month: "short",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                        {b.items !== null && <span className="text-muted"> · {b.items} itens</span>}
-                      </p>
-                      <p className="text-[12px] text-muted">{b.reason}</p>
-                    </div>
-                    <Button size="sm" onClick={() => void restoreBackup(b.key).then(refreshBackups)}>
-                      Restaurar
-                    </Button>
-                  </div>
-                ))}
-              </Group>
-            </Collapsible>
+            {!confirmClear ? (
+              <Button size="sm" variant="danger" onClick={() => setConfirmClear(true)}>
+                Começar do zero
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                variant="danger"
+                onClick={() => {
+                  void clearAll().then(refreshBackups);
+                  setConfirmClear(false);
+                }}
+              >
+                Confirmar: apagar tudo
+              </Button>
+            )}
           </div>
-        )}
-      </Section>
-
-      <CloudSection />
-
-      <Collapsible title="Integrações" count={INTEGRATIONS.length}>
-        <Group>
-          {INTEGRATIONS.map((i) => (
-            <div key={i.name} className="flex items-center justify-between gap-3 px-4 py-3">
-              <span className="text-[15px] text-ink">{i.name.split(" (")[0]}</span>
-              <span className="shrink-0 text-[13px] text-muted">{i.status.includes("não") || i.status.includes("Não") ? "desligado" : i.status}</span>
-            </div>
-          ))}
-        </Group>
-      </Collapsible>
-
-      <Section title="Inteligência">
-        <p className="mb-3 px-1 text-[15px] text-ink-2">{listInterpreters()[0].label}</p>
-        <Collapsible title="Ferramentas disponíveis para um agente" count={tools.length}>
-          <div className="space-y-4">
-            {(["read", "write"] as const).map((kind) => (
-              <div key={kind}>
-                <p className="t-label mb-2 px-1">
-                  {kind === "read" ? "Leitura (READ)" : "Escrita (WRITE)"}
+          {backups.length > 0 && (
+            <div className="mt-4">
+              <Collapsible title="Backups automáticos" count={backups.length}>
+                <p className="mb-2 px-1 text-[13px] text-muted">
+                  Guardados antes de qualquer ação que apaga ou substitui dados. Ficam os 5 mais recentes.
                 </p>
                 <Group>
-                  {tools
-                    .filter((t) => t.kind === kind)
-                    .map((t) => (
-                      <div key={t.name} className="px-4 py-2.5">
-                        <p className="font-mono text-[13px] text-ink">
-                          {t.name}
-                          {!t.enabled && <span className="ml-2 font-sans text-[11px] text-danger">desabilitada</span>}
-                          {t.policy.agent === "confirm" && t.enabled && (
-                            <span className="ml-2 font-sans text-[11px] text-muted">pede confirmação</span>
-                          )}
+                  {backups.map((b) => (
+                    <div key={b.key} className="flex items-center gap-3 px-4 py-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[14px] text-ink">
+                          {new Date(b.at).toLocaleString("pt-BR", {
+                            day: "2-digit",
+                            month: "short",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                          {b.items !== null && <span className="text-muted"> · {b.items} itens</span>}
                         </p>
-                        <p className="text-[12px] text-muted">{t.description}</p>
+                        <p className="text-[12px] text-muted">{b.reason}</p>
                       </div>
-                    ))}
+                      <Button size="sm" onClick={() => void restoreBackup(b.key).then(refreshBackups)}>
+                        Restaurar
+                      </Button>
+                    </div>
+                  ))}
                 </Group>
+              </Collapsible>
+            </div>
+          )}
+        </Section>
+
+        <CloudSection />
+
+        <Collapsible title="Integrações" count={INTEGRATIONS.length}>
+          <Group>
+            {INTEGRATIONS.map((i) => (
+              <div key={i.name} className="flex items-center justify-between gap-3 px-4 py-3">
+                <span className="text-[15px] text-ink">{i.name.split(" (")[0]}</span>
+                <span className="shrink-0 text-[13px] text-muted">
+                  {i.status.includes("não") || i.status.includes("Não") ? "desligado" : i.status}
+                </span>
               </div>
             ))}
-          </div>
+          </Group>
         </Collapsible>
-      </Section>
+
+        <Section title="Inteligência">
+          <p className="mb-3 px-1 text-[15px] text-ink-2">{listInterpreters()[0].label}</p>
+          <Collapsible title="Ferramentas disponíveis para um agente" count={tools.length}>
+            <div className="space-y-4">
+              {(["read", "write"] as const).map((kind) => (
+                <div key={kind}>
+                  <p className="t-label mb-2 px-1">{kind === "read" ? "Leitura (READ)" : "Escrita (WRITE)"}</p>
+                  <Group>
+                    {tools
+                      .filter((t) => t.kind === kind)
+                      .map((t) => (
+                        <div key={t.name} className="px-4 py-2.5">
+                          <p className="font-mono text-[13px] text-ink">
+                            {t.name}
+                            {!t.enabled && <span className="ml-2 font-sans text-[11px] text-danger">desabilitada</span>}
+                            {t.policy.agent === "confirm" && t.enabled && (
+                              <span className="ml-2 font-sans text-[11px] text-muted">pede confirmação</span>
+                            )}
+                          </p>
+                          <p className="text-[12px] text-muted">{t.description}</p>
+                        </div>
+                      ))}
+                  </Group>
+                </div>
+              ))}
+            </div>
+          </Collapsible>
+        </Section>
+      </Collapsible>
 
       <p className="mt-10 text-center text-[13px] text-muted">Leve</p>
     </>

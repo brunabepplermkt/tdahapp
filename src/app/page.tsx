@@ -8,6 +8,8 @@ import { postponeItem } from "@/lib/domain/operations";
 import { selectToday, type TodayEntry } from "@/lib/domain/selectors";
 import type { Item } from "@/lib/domain/types";
 import { useApp } from "@/lib/hooks/useApp";
+import { PERIOD_LABEL, currentPeriod, periodProgress } from "@/lib/prefs/model";
+import { usePrefs } from "@/lib/prefs/store";
 import { useStore } from "@/lib/store/store";
 import { useUI } from "@/lib/store/ui";
 import { ItemRow } from "@/components/items/ItemRow";
@@ -91,6 +93,14 @@ function Today() {
           <IconPlus size={20} />
         </span>
       </button>
+      <p className="-mt-4 mb-7 px-2 text-[14px] text-muted lg:hidden">
+        Muita coisa?{" "}
+        <Link href="/despejo" className="font-medium text-accent-text">
+          Despejar tudo
+        </Link>
+      </p>
+
+      <RoutineCard />
 
       {/* próximo compromisso, se for logo */}
       {nextEvent && soon !== null && soon <= 90 && (
@@ -225,8 +235,30 @@ function Today() {
       )}
 
       {view.slipped.length > 0 && <Slipped items={view.slipped} today={today} />}
-
     </>
+  );
+}
+
+/** A rotina do período atual, em uma linha: barra de progresso + toque para abrir. */
+function RoutineCard() {
+  const { today } = useApp();
+  const prefs = usePrefs((s) => s.prefs);
+  const period = currentPeriod(new Date(), prefs.periodStart);
+  const { done, total } = periodProgress(prefs, period, today);
+  if (total === 0 || done === total) return null;
+  return (
+    <Link
+      href={`/rotina?p=${period}`}
+      className="mb-6 flex items-center gap-4 rounded-full bg-surface py-3 pr-5 pl-6 transition active:scale-[0.99]"
+    >
+      <span className="flex-1 text-[16px] text-ink">Rotina da {PERIOD_LABEL[period].toLowerCase()}</span>
+      <span className="h-2 w-16 overflow-hidden rounded-full bg-surface-2">
+        <span className="block h-full rounded-full bg-accent" style={{ width: `${(done / total) * 100}%` }} />
+      </span>
+      <span className="text-[14px] text-muted tabular-nums">
+        {done}/{total}
+      </span>
+    </Link>
   );
 }
 

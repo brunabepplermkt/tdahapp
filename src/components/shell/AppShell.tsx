@@ -11,6 +11,7 @@ import { useStore } from "@/lib/store/store";
 import { useUI } from "@/lib/store/ui";
 import { CaptureSheet } from "@/components/capture/CaptureSheet";
 import { ItemSheet } from "@/components/items/ItemSheet";
+import { ReminderRunner } from "@/components/shell/ReminderRunner";
 import { SearchSheet } from "@/components/search/SearchSheet";
 import {
   IconDecision,
@@ -181,6 +182,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <CaptureSheet />
       <SearchSheet />
       <ItemSheet />
+      <ReminderRunner />
       <Toast />
     </div>
   );
@@ -198,7 +200,9 @@ function DesktopNav({ pathname, badges }: { pathname: string; badges: Badges }) 
             href={n.href}
             className={clsx(
               "flex h-11 items-center gap-3 rounded-full px-4 text-[15px] transition",
-              active ? "bg-surface font-medium text-ink shadow-soft ring-1 ring-black/[0.04]" : "text-ink-2 hover:bg-surface-2",
+              active
+                ? "bg-surface font-medium text-ink shadow-soft ring-1 ring-black/[0.04]"
+                : "text-ink-2 hover:bg-surface-2",
             )}
           >
             <n.icon size={18} className={active ? "text-accent-text" : "text-muted"} />

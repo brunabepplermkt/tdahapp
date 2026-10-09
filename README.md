@@ -42,6 +42,15 @@ No iPhone: abra no Safari → Compartilhar → **Adicionar à Tela de Início**.
 - **Finanças** — contas, despesas, recebimentos, recorrência; a pagar / pago / a receber / recebido / saldo previsto.
 - **Modo foco** — só o “Agora” na tela, timer de 15/25/45 min, Feito / Pular / Amanhã.
 - **Revisão semanal guiada** — 5 passos curtos: Inbox, atrasados, projetos, esquecidos, próxima semana.
+- **Micropassos** — em qualquer tarefa, “Sugerir” quebra em passos de poucos minutos; o primeiro é sempre de ≤ 2 min
+  (“só abrir”). Dá para usar todos ou só o primeiro.
+- **Despejo** (`/despejo`) — escreva tudo solto, uma coisa por linha; o app separa em Fazer / Compromissos / Dinheiro /
+  Comprar / Ideias / Preocupações, você corrige e guarda. Preocupações ficam em “Algum dia”, sem cobrança.
+- **Rotina** (`/rotina`) — checklists de manhã, tarde e noite, editáveis, com progresso por dia. A do período atual
+  aparece no Hoje.
+- **Lembretes** (`/lembretes`) — configuráveis: quais, em que horário, silêncio, máximo por dia, antecedência de
+  compromissos. Usam notificações do navegador/PWA (ou um aviso dentro do app, sem permissão). **Não há servidor de
+  push**: com o app totalmente fechado nada chega. Preferências ficam só no aparelho (`leve:prefs:v1`), fora da sincronização.
 - **Busca global** (lupa no Hoje ou tecla `/`) — itens, projetos, notas e capturas, sem se preocupar com acentos.
 - **Gestos** — deslizar para a direita conclui, para a esquerda adia para amanhã.
 

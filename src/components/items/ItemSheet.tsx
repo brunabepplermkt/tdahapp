@@ -16,7 +16,7 @@ import {
   type RecurrenceFreq,
 } from "@/lib/domain/types";
 import { useApp } from "@/lib/hooks/useApp";
-import { suggestSteps } from "@/lib/intelligence";
+import { suggestMicroSteps, totalMinutes, type MicroStep } from "@/lib/intelligence";
 import { useStore } from "@/lib/store/store";
 import { useUI } from "@/lib/store/ui";
 import { IconClock, IconLeaf, IconSparkle, IconStar, IconTrash } from "@/components/ui/icons";
@@ -81,7 +81,7 @@ function ItemDetail({ item, today, onClose }: { item: Item; today: ISODate; onCl
   const [amount, setAmount] = useState(item.money ? formatBRL(item.money.amountCents).replace("R$", "").trim() : "");
   const [showSnooze, setShowSnooze] = useState(false);
   const [stepText, setStepText] = useState("");
-  const [suggested, setSuggested] = useState<string[] | null>(null);
+  const [suggested, setSuggested] = useState<MicroStep[] | null>(null);
 
   const steps = data.items.filter((i) => i.parentId === item.id);
   const parent = item.parentId ? data.items.find((i) => i.id === item.parentId) : undefined;
@@ -105,7 +105,7 @@ function ItemDetail({ item, today, onClose }: { item: Item; today: ISODate; onCl
     update(item.id, patch);
   };
 
-  const addStep = (titles: string[]) => {
+  const addStep = (titles: (string | MicroStep)[]) => {
     apply((d) => addSteps(d, item.id, titles), titles.length > 1 ? "Passos adicionados." : undefined);
   };
 
@@ -210,7 +210,10 @@ function ItemDetail({ item, today, onClose }: { item: Item; today: ISODate; onCl
           {item.postponeCount >= 2 && steps.length === 0 && (
             <p className="mt-3 px-1 text-[13px] text-ink-2">
               Já foi adiado {item.postponeCount} vezes. Talvez esteja grande demais —{" "}
-              <button className="font-medium text-accent-text" onClick={() => setSuggested(suggestSteps(item.title))}>
+              <button
+                className="font-medium text-accent-text"
+                onClick={() => setSuggested(suggestMicroSteps(item.title))}
+              >
                 quebrar em passos?
               </button>
             </p>
@@ -226,7 +229,7 @@ function ItemDetail({ item, today, onClose }: { item: Item; today: ISODate; onCl
             {!suggested && (
               <button
                 className="inline-flex items-center gap-1 text-[13px] font-medium text-accent-text"
-                onClick={() => setSuggested(suggestSteps(item.title))}
+                onClick={() => setSuggested(suggestMicroSteps(item.title))}
               >
                 <IconSparkle size={14} /> Sugerir
               </button>
@@ -260,13 +263,17 @@ function ItemDetail({ item, today, onClose }: { item: Item; today: ISODate; onCl
           </div>
           {suggested && (
             <div className="mt-2 animate-fade rounded-2xl border border-dashed border-line p-3">
-              <p className="mb-2 text-[13px] text-muted">Sugestão (local, sem IA):</p>
-              <ol className="mb-3 list-decimal space-y-1 pl-5 text-[14px] text-ink-2">
-                {suggested.map((s) => (
-                  <li key={s}>{s}</li>
+              <p className="mb-2 text-[13px] text-muted">Micropassos · ~{totalMinutes(suggested)} min no total</p>
+              <ol className="mb-3 space-y-1.5 text-[14px] text-ink-2">
+                {suggested.map((s, i) => (
+                  <li key={s.title} className="flex gap-2">
+                    <span className="w-5 shrink-0 text-faint tabular-nums">{i + 1}.</span>
+                    <span className="flex-1">{s.title}</span>
+                    <span className="shrink-0 text-[12px] text-muted tabular-nums">{s.min} min</span>
+                  </li>
                 ))}
               </ol>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button
                   size="sm"
                   variant="primary"
@@ -276,6 +283,15 @@ function ItemDetail({ item, today, onClose }: { item: Item; today: ISODate; onCl
                   }}
                 >
                   Usar esses passos
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    addStep([suggested[0]]);
+                    setSuggested(null);
+                  }}
+                >
+                  Só o primeiro
                 </Button>
                 <Button size="sm" variant="ghost" onClick={() => setSuggested(null)}>
                   Agora não

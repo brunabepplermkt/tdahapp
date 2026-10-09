@@ -171,11 +171,13 @@ export function archiveItem(data: AppData, id: string): AppData {
 }
 
 /** Quebra um item em passos menores (filhos). */
-export function addSteps(data: AppData, parentId: string, titles: string[]): AppData {
+export function addSteps(data: AppData, parentId: string, steps: (string | { title: string; min: number })[]): AppData {
   const parent = data.items.find((i) => i.id === parentId);
   if (!parent) return data;
   let next = data;
-  for (const title of titles.map((t) => t.trim()).filter(Boolean)) {
+  for (const step of steps) {
+    const title = (typeof step === "string" ? step : step.title).trim();
+    if (!title) continue;
     next = addItem(next, {
       title,
       kind: "task",
@@ -183,7 +185,7 @@ export function addSteps(data: AppData, parentId: string, titles: string[]): App
       projectId: parent.projectId ?? null,
       parentId,
       priority: "normal",
-      estimateMin: 15,
+      estimateMin: typeof step === "string" ? 15 : step.min,
     }).data;
   }
   return next;

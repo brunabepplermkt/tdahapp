@@ -8,6 +8,7 @@ test("sem Supabase configurado o app segue em modo local, sem rede externa", asy
     if (!["localhost", "127.0.0.1"].includes(u.hostname)) external.push(r.url());
   });
   await open(page, "/mais");
+  await main(page).getByText("Avançado", { exact: true }).click();
   const status = page.getByTestId("cloud-status");
   await expect(status).toContainText("Desligada");
   await expect(main(page)).toContainText("Conta e nuvem");
@@ -30,6 +31,7 @@ test("captura do exemplo vira conta + tarefa de projeto, com datas, e fica na At
 
 test("Mais lista as ferramentas e deixa claro o que pede confirmação de um agente", async ({ page }) => {
   await open(page, "/mais");
+  await main(page).getByText("Avançado", { exact: true }).click();
   await main(page).getByText("Ferramentas disponíveis para um agente").click();
   for (const name of ["get_today", "capture_item", "create_financial_entry", "snooze_item"]) {
     await expect(main(page).locator("p.font-mono", { hasText: name }).first()).toBeVisible();
